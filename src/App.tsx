@@ -1,3 +1,4 @@
+import { AddListItemForm } from '@/components/AddListItemForm'
 function App() {
   return (
     <>
@@ -5,6 +6,7 @@ function App() {
         <img src="/logo.svg" width={200} />
         <div className="text-xl">LLM Alchemist</div>
       </div>
+      <AddListItemForm />
     </>
   )
 }
