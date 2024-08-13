@@ -1,18 +1,18 @@
 import Dexie, { type EntityTable } from 'dexie'
 
-interface List {
+interface Task {
   id: number
   name: string
   desc: string
 }
 
 const db = new Dexie('la') as Dexie & {
-  list: EntityTable<List, 'id'>
+  tasks: EntityTable<Task, 'id'>
 }
 
 db.version(1).stores({
-  list: '++id, name, desc',
+  tasks: '++id, name, desc',
 })
 
-export type { List }
+export type { Task }
 export { db }

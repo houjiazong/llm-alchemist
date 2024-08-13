@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 
-export function AddListItemForm() {
-  const item = useLiveQuery(() => db.list.toArray())
+export function AddTaskForm() {
+  const item = useLiveQuery(() => db.tasks.toArray())
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [status, setStatus] = useState('')
@@ -11,7 +11,7 @@ export function AddListItemForm() {
   async function addItem() {
     try {
       // Add the new friend!
-      const id = await db.list.add({
+      const id = await db.tasks.add({
         name,
         desc,
       })
