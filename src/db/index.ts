@@ -11,7 +11,7 @@ const db = new Dexie('la') as Dexie & {
 }
 
 db.version(1).stores({
-  tasks: '++id, name, desc',
+  tasks: '++id, name, desc, created_at',
 })
 
 export type { Task }
