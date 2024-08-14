@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { App } from '@/pages/App'
 import { NotFound } from '@/pages/NotFound'
-import { Tasks } from '@/pages/Tasks'
+import { Index } from '@/pages/Index'
 import { ErrorPage } from '@/pages/ErrorPage'
 
 export const router = createBrowserRouter([
@@ -12,7 +12,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Tasks />,
+        element: <Index />,
       },
     ],
   },

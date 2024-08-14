@@ -1,45 +1,93 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+import { Button } from '@/components/ui/button'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { db } from '@/db'
-import { useLiveQuery } from 'dexie-react-hooks'
 
-export function AddTaskForm() {
-  const item = useLiveQuery(() => db.tasks.toArray())
-  const [name, setName] = useState('')
-  const [desc, setDesc] = useState('')
-  const [status, setStatus] = useState('')
+const AddTaskFormSchema = z.object({
+  name: z
+    .string()
+    .min(1, {
+      message: 'name must be at least 1 characters.',
+    })
+    .max(14, {
+      message: 'name must be at most 14 characters.',
+    }),
+  desc: z.string(),
+})
 
-  async function addItem() {
+interface AddTaskFormProps {
+  onSuccess?: () => void
+}
+
+export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
+  const form = useForm<z.infer<typeof AddTaskFormSchema>>({
+    resolver: zodResolver(AddTaskFormSchema),
+    defaultValues: {
+      name: '',
+      desc: '',
+    },
+  })
+  const [submiting, setSubmiting] = useState(false)
+
+  async function onSubmit(data: z.infer<typeof AddTaskFormSchema>) {
+    setSubmiting(true)
     try {
-      // Add the new friend!
-      const id = await db.tasks.add({
-        name,
-        desc,
+      await db.tasks.add({
+        ...data,
+        prompt: '',
+        created_at: Date.now(),
       })
-
-      setStatus(`Friend ${name} successfully added. Got id ${id}`)
-      setName('')
-      setDesc('')
-    } catch (error) {
-      setStatus(`Failed to add ${name}: ${error}`)
+      onSuccess?.()
+    } finally {
+      setSubmiting(false)
     }
   }
+
   return (
-    <>
-      <p>{status}</p>
-      Name:
-      <input
-        type="text"
-        value={name}
-        onChange={(ev) => setName(ev.target.value)}
-      />
-      Desc:
-      <input
-        type="text"
-        value={desc}
-        onChange={(ev) => setDesc(ev.target.value)}
-      />
-      <button onClick={addItem}>Add</button>
-      <div>{JSON.stringify(item)}</div>
-    </>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input placeholder="Task name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="desc"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input placeholder="Task description" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="text-right">
+          <Button type="submit" disabled={submiting}>
+            {submiting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Submit
+          </Button>
+        </div>
+      </form>
+    </Form>
   )
 }

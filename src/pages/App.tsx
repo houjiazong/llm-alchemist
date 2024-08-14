@@ -1,11 +1,10 @@
 import { ModeToggle } from '@/components/ModeToggle'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { db } from '@/db'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { Outlet } from 'react-router-dom'
+import { Toaster } from '@/components/ui/toaster'
+import { TaskList } from '@/components/TaskList'
 
 export const App = () => {
-  const tasks = useLiveQuery(() => db.tasks.toArray())
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="h-screen flex">
@@ -16,7 +15,7 @@ export const App = () => {
                 LLM Alchemist
               </h2>
               <div className="text-sm font-light text-muted-foreground">
-                Evaluate your prompts.
+                Evaluate your LLM.
               </div>
             </div>
             <img
@@ -25,13 +24,7 @@ export const App = () => {
             />
           </header>
           <main className="flex-1 h-0">
-            {tasks && tasks.length > 0 ? (
-              <div>tasks</div>
-            ) : (
-              <div className="text-muted-foreground h-full flex items-center justify-center">
-                No results.
-              </div>
-            )}
+            <TaskList />
           </main>
           <footer>
             <ModeToggle />
@@ -41,6 +34,7 @@ export const App = () => {
           <Outlet />
         </main>
       </div>
+      <Toaster />
     </ThemeProvider>
   )
 }
