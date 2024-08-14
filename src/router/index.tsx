@@ -3,6 +3,7 @@ import { App } from '@/pages/App'
 import { NotFound } from '@/pages/NotFound'
 import { Index } from '@/pages/Index'
 import { ErrorPage } from '@/pages/ErrorPage'
+import { TaskLayout } from '@/pages/Task/Layout'
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +14,16 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Index />,
+      },
+      {
+        path: ':taskId',
+        element: <TaskLayout />,
+        children: [
+          {
+            index: true,
+            element: <div>index</div>,
+          },
+        ],
       },
     ],
   },
