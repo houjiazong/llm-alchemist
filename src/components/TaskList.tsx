@@ -9,9 +9,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
+import { useNavigate, useParams } from 'react-router-dom'
 
 export const TaskList = () => {
   const tasks = useLiveQuery(() => db.tasks.toArray())
+  const params = useParams()
+  const navigate = useNavigate()
   if (!tasks) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -27,22 +31,36 @@ export const TaskList = () => {
     )
   }
 
-  const removeTask = async (id: number) => {
+  const removeTask = async (evt: MouseEvent, id: number) => {
+    evt.stopPropagation()
     await db.tasks.delete(id)
+    const newTasks = await db.tasks.toArray()
+    if (newTasks.length === 0) {
+      return navigate('/')
+    }
+    if (Number(params.taskId) === id && newTasks.length) {
+      return navigate(`/${newTasks[0].id}`)
+    }
   }
 
   return (
     <ScrollArea className="h-full">
-      <div className="h-full py-8 space-y-3">
+      <div className="h-full py-8 space-y-3 px-4">
         {tasks.map((task) => {
           return (
-            <Card key={task.id} className="group cursor-pointer">
+            <Card
+              key={task.id}
+              className={cn('group cursor-pointer hover:border-gray-500', {
+                'border-gray-400': params.taskId === task.id.toString(),
+              })}
+              onClick={() => navigate(`/${task.id}`)}
+            >
               <CardHeader className="p-2">
                 <CardTitle className="text-md flex">
                   <span className="flex-1 truncate">{task.name}</span>
                   <CircleX
                     className="opacity-0 translate-x-1 ml-2 h-4 w-4 text-gray-500 group-hover:opacity-100 group-hover:translate-x-0 hover:text-gray-800 transition-[opacity,transform]"
-                    onClick={() => removeTask(task.id)}
+                    onClick={(evt) => removeTask(evt, task.id)}
                   />
                 </CardTitle>
                 <CardDescription>
