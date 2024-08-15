@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { db } from '@/db'
+import { Textarea } from '@/components/ui/textarea'
 
 const AddTaskFormSchema = z.object({
   name: z
@@ -76,7 +77,7 @@ export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Task description" {...field} />
+                <Textarea placeholder="Task description" rows={3} {...field} />
               </FormControl>
             </FormItem>
           )}
