@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { db } from '@/db'
 import { AddTaskForm } from '@/components/AddTaskForm'
 import { useState } from 'react'
+import { Navigate } from 'react-router-dom'
 
 export const Index = () => {
   const tasks = useLiveQuery(() => db.tasks.toArray())
@@ -50,5 +51,5 @@ export const Index = () => {
       </div>
     )
   }
-  return <div>Tasks</div>
+  return <Navigate to={`/${tasks[0].id}`} />
 }

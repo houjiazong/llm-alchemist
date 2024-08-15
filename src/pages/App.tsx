@@ -3,13 +3,26 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import { Outlet } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TaskList } from '@/components/TaskList'
+import { Button } from '@/components/ui/button'
+import { CirclePlus } from 'lucide-react'
+import { AddTaskForm } from '@/components/AddTaskForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { useState } from 'react'
 
 export const App = () => {
+  const [dialogOpen, setDialogOpen] = useState(false)
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="h-screen flex">
-        <aside className="w-[260px] border-r shadow-md flex flex-col p-4">
-          <header className="flex items-center">
+        <aside className="w-[260px] border-r shadow-md flex flex-col flex-shrink-0 flex-grow-0 py-4">
+          <header className="flex items-center px-4">
             <div className="flex-1">
               <h2 className="text-lg font-semibold tracking-tight">
                 LLM Alchemist
@@ -26,11 +39,34 @@ export const App = () => {
           <main className="flex-1 h-0">
             <TaskList />
           </main>
-          <footer>
-            <ModeToggle />
+          <footer className="flex items-center px-4">
+            <div className="flex-1">
+              <ModeToggle />
+            </div>
+            <div className="flex-shrink-0 flex-grow-0">
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <CirclePlus className="mr-2 w-4 h-4" />
+                    New task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>New task</DialogTitle>
+                    <DialogDescription></DialogDescription>
+                  </DialogHeader>
+                  <AddTaskForm
+                    onSuccess={() => {
+                      setDialogOpen(false)
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </footer>
         </aside>
-        <main className="flex-1">
+        <main className="flex-1 flex flex-col">
           <Outlet />
         </main>
       </div>
