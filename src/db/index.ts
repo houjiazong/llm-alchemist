@@ -4,8 +4,20 @@ interface Task {
   id: number
   name: string
   desc: string
-  prompt: string
   created_at: number
+  requestConfig?: {
+    method: string
+    url: string
+    headers?: {
+      key: string
+      value?: string
+    }[]
+    body?: string
+    script: {
+      request: string
+      response: string
+    }
+  }
 }
 
 const db = new Dexie('la') as Dexie & {
@@ -13,7 +25,7 @@ const db = new Dexie('la') as Dexie & {
 }
 
 db.version(1).stores({
-  tasks: '++id, name, desc, prompt, created_at',
+  tasks: '++id, name, desc, requestConfig, created_at',
 })
 
 export type { Task }

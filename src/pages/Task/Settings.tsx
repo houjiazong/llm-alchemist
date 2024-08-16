@@ -1,10 +1,17 @@
 import { RequestSettingsForm } from '@/components/RequestSettingsForm'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 export const TaskSettings = () => {
   return (
-    <div className="py-4 max-w-3xl m-auto">
-      <RequestSettingsForm />
-    </div>
+    <Card className="py-4 max-w-xl m-auto">
+      <CardHeader>
+        <CardTitle>Configur connection</CardTitle>
+        {/* <CardDescription>Deploy your new project in one-click.</CardDescription> */}
+      </CardHeader>
+      <CardContent>
+        <RequestSettingsForm />
+      </CardContent>
+    </Card>
     // <div>
     //   <Tabs defaultValue="endpoint" className="w-full">
     //     <div>

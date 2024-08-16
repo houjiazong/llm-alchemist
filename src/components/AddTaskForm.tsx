@@ -47,7 +47,6 @@ export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
     try {
       await db.tasks.add({
         ...data,
-        prompt: '',
         created_at: Date.now(),
       })
       onSuccess?.()

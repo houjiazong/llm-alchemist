@@ -11,6 +11,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from 'react-router-dom'
+import { type MouseEvent } from 'react'
 
 export const TaskList = () => {
   const tasks = useLiveQuery(() => db.tasks.toArray())

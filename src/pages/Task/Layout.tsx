@@ -49,7 +49,7 @@ export const TaskLayout = () => {
         </NavigationMenu>
       </div>
       <ScrollArea className="flex-1 h-0">
-        <div className="container h-full">
+        <div className="container h-full pb-4">
           <Outlet />
         </div>
       </ScrollArea>
