@@ -1,30 +1,18 @@
-import { RequestSettingsForm } from '@/components/RequestSettingsForm'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/db'
+import {
+  OpenAIConfigForm,
+  type OpenAIConfig,
+} from '@/components/OpenAIConfigForm'
+import { useParams } from 'react-router-dom'
 export const TaskSettings = () => {
-  return (
-    <Card className="py-4 max-w-xl m-auto">
-      <CardHeader>
-        <CardTitle>Configur connection</CardTitle>
-        {/* <CardDescription>Deploy your new project in one-click.</CardDescription> */}
-      </CardHeader>
-      <CardContent>
-        <RequestSettingsForm />
-      </CardContent>
-    </Card>
-    // <div>
-    //   <Tabs defaultValue="endpoint" className="w-full">
-    //     <div>
-    //       <TabsList>
-    //         <TabsTrigger value="endpoint">Endpoint</TabsTrigger>
-    //         <TabsTrigger value="request">Request</TabsTrigger>
-    //       </TabsList>
-    //     </div>
-    //     <TabsContent value="endpoint">
-    //       <EndpointSettings />
-    //     </TabsContent>
-    //     <TabsContent value="request">Request</TabsContent>
-    //   </Tabs>
-    // </div>
-  )
+  const params = useParams()
+  const task = useLiveQuery(() => db.tasks.get(Number(params.taskId)))
+  const savedOpenAIOptions = task?.openAIOptions
+  const handleSubmit = async (values: OpenAIConfig) => {
+    await db.tasks.update(Number(params.taskId), {
+      openAIOptions: values,
+    })
+  }
+  return <OpenAIConfigForm value={savedOpenAIOptions} onSubmit={handleSubmit} />
 }

@@ -1,23 +1,27 @@
 import Dexie, { type EntityTable } from 'dexie'
 
+interface QA {
+  question: string
+  answer?: string
+  rate?: string | number
+}
+interface OpenAIOptions {
+  baseURL: string
+  apiKey: string
+  params: {
+    model: string
+    prompt?: string
+    max_tokens?: number
+    temperature?: number
+  }
+}
 interface Task {
   id: number
   name: string
-  desc: string
+  desc?: string
   created_at: number
-  requestConfig?: {
-    method: string
-    url: string
-    headers?: {
-      key: string
-      value?: string
-    }[]
-    body?: string
-    script: {
-      request: string
-      response: string
-    }
-  }
+  openAIOptions?: OpenAIOptions
+  qas?: QA[]
 }
 
 const db = new Dexie('la') as Dexie & {
@@ -25,8 +29,8 @@ const db = new Dexie('la') as Dexie & {
 }
 
 db.version(1).stores({
-  tasks: '++id, name, desc, requestConfig, created_at',
+  tasks: '++id, name, desc, openAIOptions, qas, created_at',
 })
 
-export type { Task }
+export type { Task, QA, OpenAIOptions }
 export { db }

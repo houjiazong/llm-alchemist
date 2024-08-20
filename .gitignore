@@ -26,3 +26,7 @@ dist-ssr
 
 # config
 dev.proxy.config.ts
+
+# package manager
+package-lock.json
+yarn.lock

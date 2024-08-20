@@ -44,6 +44,11 @@ export const TaskList = () => {
     }
   }
 
+  const onCardClick = (id: number) => {
+    if (Number(params.taskId) === id) return
+    navigate(`/${id}`)
+  }
+
   return (
     <ScrollArea className="h-full">
       <div className="h-full py-8 space-y-3 px-4">
@@ -54,7 +59,7 @@ export const TaskList = () => {
               className={cn('group cursor-pointer hover:border-gray-500', {
                 'border-gray-400': params.taskId === task.id.toString(),
               })}
-              onClick={() => navigate(`/${task.id}`)}
+              onClick={() => onCardClick(task.id)}
             >
               <CardHeader className="p-2">
                 <CardTitle className="text-md flex">

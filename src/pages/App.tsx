@@ -1,6 +1,6 @@
 import { ModeToggle } from '@/components/ModeToggle'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TaskList } from '@/components/TaskList'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import { useState } from 'react'
 
 export const App = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
+  const navigate = useNavigate()
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <div className="h-screen flex">
@@ -57,8 +58,9 @@ export const App = () => {
                     <DialogDescription></DialogDescription>
                   </DialogHeader>
                   <AddTaskForm
-                    onSuccess={() => {
+                    onSuccess={(id) => {
                       setDialogOpen(false)
+                      navigate(`/${id}/settings`)
                     }}
                   />
                 </DialogContent>

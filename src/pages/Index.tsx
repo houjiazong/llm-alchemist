@@ -12,11 +12,12 @@ import { Button } from '@/components/ui/button'
 import { db } from '@/db'
 import { AddTaskForm } from '@/components/AddTaskForm'
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 
 export const Index = () => {
   const tasks = useLiveQuery(() => db.tasks.toArray())
   const [dialogOpen, setDialogOpen] = useState(false)
+  const navigate = useNavigate()
   if (!tasks)
     return (
       <div className="h-full flex items-center justify-center">
@@ -41,8 +42,9 @@ export const Index = () => {
                 <DialogDescription></DialogDescription>
               </DialogHeader>
               <AddTaskForm
-                onSuccess={() => {
+                onSuccess={(id) => {
                   setDialogOpen(false)
+                  navigate(`/${id}/settings`)
                 }}
               />
             </DialogContent>

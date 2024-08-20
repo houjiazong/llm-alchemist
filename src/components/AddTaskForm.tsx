@@ -29,7 +29,7 @@ const AddTaskFormSchema = z.object({
 })
 
 interface AddTaskFormProps {
-  onSuccess?: () => void
+  onSuccess?: (id: number) => void
 }
 
 export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
@@ -45,11 +45,11 @@ export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
   async function onSubmit(data: z.infer<typeof AddTaskFormSchema>) {
     setSubmiting(true)
     try {
-      await db.tasks.add({
+      const id = await db.tasks.add({
         ...data,
         created_at: Date.now(),
       })
-      onSuccess?.()
+      onSuccess?.(id)
     } finally {
       setSubmiting(false)
     }

@@ -4,6 +4,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import {
   NavLink,
@@ -48,8 +49,9 @@ export const TaskLayout = () => {
           </NavigationMenuList>
         </NavigationMenu>
       </div>
+      <Separator />
       <ScrollArea className="flex-1 h-0">
-        <div className="container h-full pb-4">
+        <div className="container h-full py-4">
           <Outlet />
         </div>
       </ScrollArea>
