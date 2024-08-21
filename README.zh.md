@@ -43,7 +43,7 @@ pnpm install
 1. **复制开发环境转发配置文件：**
 
 ```bash
-cp example.dev.proxy.config.ts dev.proxy.config.ts
+cp example.dev.proxy.config.js dev.proxy.config.js
 ```
 
 2. **启动开发：**

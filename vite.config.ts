@@ -1,18 +1,26 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
 import react from '@vitejs/plugin-react'
-import fs, { constants } from 'node:fs/promises'
+import fs from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 
-// https://vitejs.dev/config/
-export default defineConfig(async () => {
-  let devProxyConfig = {}
+export default defineConfig(async ({ command }) => {
+  let server = {}
+  if (command === 'serve') {
+    const devProxyConfigPath = fileURLToPath(
+      new URL('./dev.proxy.config.js', import.meta.url)
+    )
 
-  try {
-    await fs.access('./dev.proxy.config.ts', constants.F_OK)
-    devProxyConfig = (await import('./dev.proxy.config')).default
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (err) {
-    console.log('No dev.proxy.config.ts found, skipping proxy setup.')
+    try {
+      await fs.access(devProxyConfigPath)
+      const devProxyConfig = await import(devProxyConfigPath)
+      server = {
+        proxy: devProxyConfig.default,
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      console.log('No proxy configuration found, skipping proxy setup.')
+    }
   }
   return {
     plugins: [react()],
@@ -21,8 +29,6 @@ export default defineConfig(async () => {
         '@': path.resolve(__dirname, './src'),
       },
     },
-    server: {
-      proxy: devProxyConfig,
-    },
+    server,
   }
 })

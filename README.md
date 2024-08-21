@@ -43,7 +43,7 @@ pnpm install
 1. **Copy the development proxy configuration file:**
 
 ```bash
-cp example.dev.proxy.config.ts dev.proxy.config.ts
+cp example.dev.proxy.config.js dev.proxy.config.js
 ```
 
 2. **Start the development server:**
