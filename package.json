@@ -73,5 +73,9 @@
       "prettier --write",
       "eslint --fix"
     ]
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "pnpm": ">=7.0.0"
   }
 }
