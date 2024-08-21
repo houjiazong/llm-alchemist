@@ -66,9 +66,17 @@ You can deploy this project directly to Vercel by clicking the button below:
 
 [![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/houjiazong/llm-alchemist&project-name=llm-alchemist&repository-name=LLM-Alchemist)
 
-## Handling CORS Issues
+## Handling CORS issues in production environment
 
-After deploying the project, you may encounter Cross-Origin Resource Sharing (CORS) issues, especially when making API requests to different domains. To resolve this, ensure that the server corresponding to your BaseURL is configured to allow requests from your deployed domain.
+- After the project is deployed, you may encounter cross-origin resource sharing (CORS) issues, especially when making API requests to other domains. To solve this problem, make sure that the server corresponding to your BaseURL is configured to allow requests from the domain you deployed.
+
+- You can also customize the proxy service by setting the environment variable `VITE_PROXY_URL`, for example:
+
+```
+VITE_PROXY_URL=https://your-proxy-url.com?target=
+```
+
+When the program is running, the original address of the request will be appended to the target parameter.
 
 ## License
 

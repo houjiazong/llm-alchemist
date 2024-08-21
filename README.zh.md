@@ -66,9 +66,17 @@ pnpm build
 
 [![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/houjiazong/llm-alchemist&project-name=llm-alchemist&repository-name=LLM-Alchemist)
 
-## 处理 CORS 问题
+## 生产环境处理 CORS 问题
 
-项目部署后，你可能会遇到跨域资源共享 (CORS) 问题，尤其是在向其他域发出 API 请求时。要解决此问题，请确保你的 BaseURL 对应的服务器配置为允许来自您部署的域的请求。
+- 项目部署后，你可能会遇到跨域资源共享 (CORS) 问题，尤其是在向其他域发出 API 请求时。要解决此问题，请确保你的 BaseURL 对应的服务器配置为允许来自您部署的域的请求。
+
+- 你也可以通过设置环境变量`VITE_PROXY_URL`来自定义代理服务，比如：
+
+```
+VITE_PROXY_URL=https://your-proxy-url.com?target=
+```
+
+程序在运行时，会把请求的原地址追加至target参数中。
 
 ## 许可证
 
