@@ -113,7 +113,9 @@ export const useWorkbench = () => {
 
     const updatedQas = [...qas]
     const client = new OpenAI({
-      baseURL: task.openAIOptions.baseURL,
+      baseURL: import.meta.env.VITE_PROXY_URL
+        ? `${import.meta.env.VITE_PROXY_URL}${task.openAIOptions.baseURL}`
+        : task.openAIOptions.baseURL,
       apiKey: task.openAIOptions.apiKey,
       dangerouslyAllowBrowser: true,
     })
@@ -155,9 +157,8 @@ export const useWorkbench = () => {
           updatedQas[i].answer = answer
           setQas([...updatedQas])
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        // Handle error appropriately
+        console.error(error)
       } finally {
         setLoading((prevLoading) => {
           const newLoading = [...prevLoading]
