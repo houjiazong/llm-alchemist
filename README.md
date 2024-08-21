@@ -64,7 +64,7 @@ The output will be located in the dist folder, ready for deployment.
 
 You can deploy this project directly to Vercel by clicking the button below:
 
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/houjiazong/llm-alchemist)
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/houjiazong/llm-alchemist&project-name=llm-alchemist&repository-name=LLM-Alchemist)
 
 ## Handling CORS Issues
 

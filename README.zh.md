@@ -64,7 +64,7 @@ pnpm build
 
 您可以通过点击下面的按钮将此项目直接部署到 Vercel：
 
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/houjiazong/llm-alchemist)
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/houjiazong/llm-alchemist&project-name=llm-alchemist&repository-name=LLM-Alchemist)
 
 ## 处理 CORS 问题
 
