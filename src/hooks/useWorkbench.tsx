@@ -13,6 +13,7 @@ export const useWorkbench = () => {
   const params = useParams()
   const task = useLiveQuery(() => db.tasks.get(Number(params.taskId)))
 
+  // init qas
   const initialQas = useMemo(
     () => [...(task?.qas || []), { question: '', answer: '', rate: 0 }],
     [task?.qas]
