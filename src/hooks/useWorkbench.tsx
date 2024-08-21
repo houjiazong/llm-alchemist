@@ -1,7 +1,7 @@
 import { type QA, db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useToast } from '@/components/ui/use-toast'
 import { ToastAction } from '@/components/ui/toast'
 import OpenAI from 'openai'
@@ -13,62 +13,76 @@ export const useWorkbench = () => {
   const params = useParams()
   const task = useLiveQuery(() => db.tasks.get(Number(params.taskId)))
 
-  // 初始化问题列表
-  const [qas, setQas] = useState<QA[]>([
-    ...(task?.qas || []),
-    { question: '', answer: '', rate: 0 },
-  ])
-  // 初始化每个问题的loading状态，用于请求时UI中显示loading
+  const initialQas = useMemo(
+    () => [...(task?.qas || []), { question: '', answer: '', rate: 0 }],
+    [task?.qas]
+  )
+
+  const [qas, setQas] = useState<QA[]>(initialQas)
   const [loading, setLoading] = useState<boolean[]>(
-    new Array(qas.length).fill(false)
+    new Array(initialQas.length).fill(false)
   )
   const abortControllerRef = useRef<AbortController | null>(null)
-  // 当indexed db中问题数据发生变更后，重新初始化问题和loading状态
+
   useEffect(() => {
-    if (task?.qas?.length) {
-      setQas([...task.qas, { question: '', answer: '', rate: 0 }])
-      setLoading(new Array(task.qas.length + 1).fill(false))
-    }
-    // 组件卸载后中止请求
+    const dbQas = task?.qas || []
+    setQas([...dbQas, { question: '', answer: '', rate: 0 }])
+    setLoading(new Array(dbQas.length + 1).fill(false))
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
     }
   }, [task?.qas])
-  // 输入问题后，自动追加一条新的数据
-  const onQuestionChange = (index: number, value: string) => {
-    const newQas = [...qas]
-    newQas[index].question = value
 
-    if (index === qas.length - 1 && value !== '') {
-      newQas.push({ question: '', answer: '', rate: 0 })
-      setLoading([...loading, false])
-    }
+  const onQuestionChange = useCallback(
+    (index: number, value: string) => {
+      setQas((prevQas) => {
+        const newQas = [...prevQas]
+        newQas[index].question = value
+        if (index === prevQas.length - 1 && value !== '') {
+          newQas.push({ question: '', answer: '', rate: 0 })
+          setLoading((prevLoading) => [...prevLoading, false])
+        }
+        db.tasks.update(Number(params.taskId), {
+          qas: newQas.filter((qa) => !!qa.question.trim()),
+        })
+        return newQas
+      })
+    },
+    [params.taskId]
+  )
 
-    setQas(newQas)
-    db.tasks.update(Number(params.taskId), {
-      qas: newQas.filter((qa) => !!qa.question.trim()),
-    })
-  }
-  const onQuestionRemove = (index: number) => {
-    const newQas = qas.filter((_, i) => i !== index)
-    setQas(newQas)
-    setLoading(loading.filter((_, i) => i !== index))
-    db.tasks.update(Number(params.taskId), {
-      qas: newQas.filter((qa) => !!qa.question.trim()),
-    })
-  }
-  const onRateChange = (index: number, value: number) => {
-    const newQas = [...qas]
-    newQas[index].rate = value
-    setQas(newQas)
+  const onQuestionRemove = useCallback(
+    (index: number) => {
+      setQas((prevQas) => {
+        const newQas = prevQas.filter((_, i) => i !== index)
+        setLoading((prevLoading) => prevLoading.filter((_, i) => i !== index))
+        db.tasks.update(Number(params.taskId), {
+          qas: newQas.filter((qa) => !!qa.question.trim()),
+        })
+        console.log(newQas)
+        return newQas
+      })
+    },
+    [params.taskId]
+  )
 
-    db.tasks.update(Number(params.taskId), {
-      qas: newQas.filter((qa) => !!qa.question.trim()),
-    })
-  }
-  const onRunAll = async () => {
+  const onRateChange = useCallback(
+    (index: number, value: number) => {
+      setQas((prevQas) => {
+        const newQas = [...prevQas]
+        newQas[index].rate = value
+        db.tasks.update(Number(params.taskId), {
+          qas: newQas.filter((qa) => !!qa.question.trim()),
+        })
+        return newQas
+      })
+    },
+    [params.taskId]
+  )
+
+  const onRunAll = useCallback(async () => {
     if (
       !task?.openAIOptions?.baseURL ||
       !task?.openAIOptions?.apiKey ||
@@ -96,31 +110,28 @@ export const useWorkbench = () => {
         description: 'Please add a question.',
       })
     }
-    // 拷贝问题列表，当所有请求结束后，将结果存至indexed db
+
     const updatedQas = [...qas]
     const client = new OpenAI({
       baseURL: task.openAIOptions.baseURL,
       apiKey: task.openAIOptions.apiKey,
       dangerouslyAllowBrowser: true,
     })
+
     for (let i = 0, len = updatedQas.length; i < len; i++) {
-      // 跳过空问题
-      if (!updatedQas[i].question || updatedQas[i].question.trim() === '') {
-        continue
-      }
+      if (!updatedQas[i].question.trim()) continue
+
       setLoading((prevLoading) => {
         const newLoading = [...prevLoading]
         newLoading[i] = true
         return newLoading
       })
+
       abortControllerRef.current = new AbortController()
       try {
         let answer = ''
         const messages: ChatCompletionMessageParam[] = [
-          {
-            role: 'user',
-            content: updatedQas[i].question,
-          },
+          { role: 'user', content: updatedQas[i].question },
         ]
         if (task.openAIOptions.params.prompt) {
           messages.unshift({
@@ -136,10 +147,9 @@ export const useWorkbench = () => {
             max_tokens: task.openAIOptions.params.max_tokens,
             temperature: task.openAIOptions.params.temperature,
           },
-          {
-            signal: abortControllerRef.current.signal,
-          }
+          { signal: abortControllerRef.current.signal }
         )
+
         for await (const chunk of response) {
           answer += chunk.choices[0].delta?.content || ''
           updatedQas[i].answer = answer
@@ -147,7 +157,7 @@ export const useWorkbench = () => {
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
-        /* empty */
+        // Handle error appropriately
       } finally {
         setLoading((prevLoading) => {
           const newLoading = [...prevLoading]
@@ -159,10 +169,13 @@ export const useWorkbench = () => {
     await db.tasks.update(Number(params.taskId), {
       qas: updatedQas.filter((qa) => !!qa.question.trim()),
     })
-  }
+  }, [task, qas, params.taskId, toast, navigate])
+
+  const someLoading = useMemo(() => loading.some((l) => l), [loading])
+
   return {
     loading,
-    someLoading: loading.some((l) => l),
+    someLoading,
     task,
     qas,
     onQuestionChange,
