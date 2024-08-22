@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/form'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
@@ -47,6 +47,7 @@ export const OpenAIConfigForm = ({
   value,
 }: OpenAIConfigFormProps) => {
   const [submiting, setSubmiting] = useState(false)
+  const [showKey, setShowKey] = useState(false)
   const form = useForm<OpenAIConfig>({
     resolver: zodResolver(openAIConfigSchema),
     defaultValues: {
@@ -108,7 +109,26 @@ export const OpenAIConfigForm = ({
                 <FormItem className="grid gap-2 space-y-0">
                   <FormLabel>API Key</FormLabel>
                   <FormControl>
-                    <Input placeholder="API Key" {...field} />
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        placeholder="API Key"
+                        {...field}
+                        type={showKey ? 'text' : 'password'}
+                      />
+                      <Button size="icon" variant="ghost">
+                        {!showKey ? (
+                          <EyeOff
+                            className="w-4 h-4"
+                            onClick={() => setShowKey(!showKey)}
+                          />
+                        ) : (
+                          <Eye
+                            className="w-4 h-4"
+                            onClick={() => setShowKey(!showKey)}
+                          />
+                        )}
+                      </Button>
+                    </div>
                   </FormControl>
                 </FormItem>
               )}
