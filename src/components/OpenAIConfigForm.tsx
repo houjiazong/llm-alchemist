@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { type OpenAIOptions } from '@/db'
 import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/components/ui/use-toast'
 
 const openAIConfigSchema = z.object({
   baseURL: z.string().min(1, 'Base URL is required'),
@@ -46,6 +47,7 @@ export const OpenAIConfigForm = ({
   onSubmit,
   value,
 }: OpenAIConfigFormProps) => {
+  const { toast } = useToast()
   const [submiting, setSubmiting] = useState(false)
   const [showKey, setShowKey] = useState(false)
   const form = useForm<OpenAIConfig>({
@@ -81,6 +83,10 @@ export const OpenAIConfigForm = ({
     setSubmiting(true)
     try {
       await onSubmit?.(data)
+      toast({
+        title: 'Saved successfully',
+        description: 'Please go to the workbench page to test',
+      })
     } finally {
       setSubmiting(false)
     }
@@ -162,7 +168,7 @@ export const OpenAIConfigForm = ({
                       max={1}
                       step={0.1}
                       value={[field.value]}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => field.onChange(Number(value))}
                     />
                   </FormControl>
                 </FormItem>
@@ -197,7 +203,7 @@ export const OpenAIConfigForm = ({
                       max={4096}
                       step={1}
                       value={[field.value]}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => field.onChange(Number(value))}
                     />
                   </FormControl>
                 </FormItem>
