@@ -25,13 +25,15 @@ interface Task {
   qas?: QA[]
 }
 
+export const DB_STRUCTURE = {
+  tasks: '++id, name, desc, openAIOptions, qas, created_at',
+}
+
 const db = new Dexie('la') as Dexie & {
   tasks: EntityTable<Task, 'id'>
 }
 
-db.version(1).stores({
-  tasks: '++id, name, desc, openAIOptions, qas, created_at',
-})
+db.version(1).stores(DB_STRUCTURE)
 
 export type { Task, QA, OpenAIOptions }
 export { db }
