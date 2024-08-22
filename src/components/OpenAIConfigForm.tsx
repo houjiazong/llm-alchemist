@@ -121,7 +121,7 @@ export const OpenAIConfigForm = ({
                         {...field}
                         type={showKey ? 'text' : 'password'}
                       />
-                      <Button size="icon" variant="ghost">
+                      <Button size="icon" variant="ghost" type="button">
                         {!showKey ? (
                           <EyeOff
                             className="w-4 h-4"
