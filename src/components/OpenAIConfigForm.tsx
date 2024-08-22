@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { type OpenAIOptions } from '@/db'
+import { Switch } from '@/components/ui/switch'
 
 const openAIConfigSchema = z.object({
   baseURL: z.string().min(1, 'Base URL is required'),
@@ -31,6 +32,7 @@ const openAIConfigSchema = z.object({
       .number()
       .min(0, { message: 'Temperature must be between 0 and 1' })
       .max(1, { message: 'Temperature must be between 0 and 1' }),
+    stream: z.boolean().optional(),
   }),
 })
 
@@ -55,6 +57,7 @@ export const OpenAIConfigForm = ({
         prompt: value?.params?.prompt ?? '',
         max_tokens: value?.params?.max_tokens ?? 1024,
         temperature: value?.params?.temperature ?? 0.7,
+        stream: value?.params?.stream ?? false,
       },
     },
   })
@@ -68,6 +71,7 @@ export const OpenAIConfigForm = ({
           prompt: value?.params?.prompt ?? '',
           max_tokens: value?.params?.max_tokens ?? 1024,
           temperature: value?.params?.temperature ?? 0.7,
+          stream: value?.params?.stream ?? false,
         },
       })
     }
@@ -176,6 +180,23 @@ export const OpenAIConfigForm = ({
                       onValueChange={field.onChange}
                     />
                   </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="params.stream"
+              render={({ field }) => (
+                <FormItem className="grid gap-4 space-y-0">
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Stream</FormLabel>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={(value) => {
+                        field.onChange(value)
+                      }}
+                    />
+                  </div>
                 </FormItem>
               )}
             />

@@ -146,15 +146,24 @@ export const useWorkbench = () => {
           {
             model: task.openAIOptions.params.model,
             messages,
-            stream: true,
+            stream: task.openAIOptions.params.stream,
             max_tokens: task.openAIOptions.params.max_tokens,
             temperature: task.openAIOptions.params.temperature,
           },
           { signal: abortControllerRef.current.signal }
         )
-
-        for await (const chunk of response) {
-          answer += chunk.choices[0].delta?.content || ''
+        if (task.openAIOptions.params.stream) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          for await (const chunk of response) {
+            answer += chunk.choices[0].delta?.content || ''
+            updatedQas[i].answer = answer
+            setQas([...updatedQas])
+          }
+        } else {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          answer = response.choices[0].message.content
           updatedQas[i].answer = answer
           setQas([...updatedQas])
         }

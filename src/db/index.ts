@@ -13,6 +13,7 @@ interface OpenAIOptions {
     prompt?: string
     max_tokens?: number
     temperature?: number
+    stream?: boolean
   }
 }
 interface Task {
