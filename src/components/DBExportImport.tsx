@@ -28,6 +28,7 @@ export const DBExportImpot = ({
     try {
       const blob = await exportDB(db, {
         filter: (_table, value) => {
+          delete value.id
           if (value?.openAIOptions?.apiKey) {
             // 移除 openAIOptions 对象中的 apiKey
             delete value.openAIOptions.apiKey
@@ -50,9 +51,7 @@ export const DBExportImpot = ({
     const file = event.target.files?.[0]
     if (file) {
       try {
-        await importInto(db, file, {
-          overwriteValues: true,
-        })
+        await importInto(db, file)
         toast({
           title: 'Import successful',
           description: 'Import successful, please continue your operation.',
@@ -91,10 +90,7 @@ export const DBExportImpot = ({
           <Tooltip>
             <TooltipTrigger className="w-full">Import</TooltipTrigger>
             <TooltipContent side="right">
-              <p>
-                After importing, all your data will be overwritten, please
-                operate with caution
-              </p>
+              <p>Keep existing data and append newly imported data</p>
             </TooltipContent>
           </Tooltip>
         </DropdownMenuItem>

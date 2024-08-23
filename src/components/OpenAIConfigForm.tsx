@@ -65,19 +65,17 @@ export const OpenAIConfigForm = ({
     },
   })
   useEffect(() => {
-    if (value) {
-      form.reset({
-        baseURL: value?.baseURL ?? '',
-        apiKey: value?.apiKey ?? '',
-        params: {
-          model: value?.params?.model ?? '',
-          prompt: value?.params?.prompt ?? '',
-          max_tokens: value?.params?.max_tokens ?? 1024,
-          temperature: value?.params?.temperature ?? 0.7,
-          stream: value?.params?.stream ?? false,
-        },
-      })
-    }
+    form.reset({
+      baseURL: value?.baseURL ?? '',
+      apiKey: value?.apiKey ?? '',
+      params: {
+        model: value?.params?.model ?? '',
+        prompt: value?.params?.prompt ?? '',
+        max_tokens: value?.params?.max_tokens ?? 1024,
+        temperature: value?.params?.temperature ?? 0.7,
+        stream: value?.params?.stream ?? false,
+      },
+    })
   }, [form, value])
   async function _onSubmit(data: OpenAIConfig) {
     setSubmiting(true)
@@ -93,7 +91,7 @@ export const OpenAIConfigForm = ({
   }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(_onSubmit)}>
+      <form onSubmit={form.handleSubmit(_onSubmit)} autoComplete="off">
         <div className="grid items-stretch gap-6 md:grid-cols-[1fr_240px]">
           <div className="flex-col space-y-4 sm:flex md:order-2">
             <FormField
@@ -119,19 +117,27 @@ export const OpenAIConfigForm = ({
                       <Input
                         placeholder="API Key"
                         {...field}
-                        type={showKey ? 'text' : 'password'}
+                        style={
+                          showKey
+                            ? {}
+                            : {
+                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                // @ts-ignore
+                                WebkitTextSecurity: 'disc',
+                                textSecurity: 'disc',
+                              }
+                        }
                       />
-                      <Button size="icon" variant="ghost" type="button">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        type="button"
+                        onClick={() => setShowKey(!showKey)}
+                      >
                         {!showKey ? (
-                          <EyeOff
-                            className="w-4 h-4"
-                            onClick={() => setShowKey(!showKey)}
-                          />
+                          <EyeOff className="w-4 h-4" />
                         ) : (
-                          <Eye
-                            className="w-4 h-4"
-                            onClick={() => setShowKey(!showKey)}
-                          />
+                          <Eye className="w-4 h-4" />
                         )}
                       </Button>
                     </div>
