@@ -2,33 +2,99 @@ import { type QA, db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import { useToast } from '@/components/ui/use-toast'
 import { ToastAction } from '@/components/ui/toast'
 import OpenAI from 'openai'
-import { ChatCompletionMessageParam } from 'openai/resources/index.mjs'
+import {
+  ChatCompletion,
+  ChatCompletionChunk,
+  ChatCompletionMessageParam,
+} from 'openai/resources/index.mjs'
+import { getTaskIdFromRouteParams } from '@/lib/utils'
+
+export interface QAInfo {
+  loading: boolean
+  completionTime: number | null
+  responseTime: number | null
+  error: string | null
+}
 
 export const useWorkbench = () => {
   const { toast } = useToast()
   const navigate = useNavigate()
   const params = useParams()
-  const task = useLiveQuery(() => db.tasks.get(Number(params.taskId)))
+  const task = useLiveQuery(() =>
+    db.tasks.get(getTaskIdFromRouteParams(params))
+  )
 
   // init qas
   const initialQas = useMemo(
-    () => [...(task?.qas || []), { question: '', answer: '', rate: 0 }],
+    () => [
+      ...(task?.qas || []).map((qa) => ({
+        ...qa,
+        id: qa.id || uuidv4(),
+      })),
+      {
+        id: uuidv4(),
+        question: '',
+        answer: '',
+        rate: 0,
+      },
+    ],
     [task?.qas]
   )
 
   const [qas, setQas] = useState<QA[]>(initialQas)
-  const [loading, setLoading] = useState<boolean[]>(
-    new Array(initialQas.length).fill(false)
+  const [infos, setInfos] = useState<Record<string, QAInfo>>(
+    initialQas.reduce(
+      (pre, cur) => {
+        if (!pre[cur.id]) {
+          pre[cur.id] = {
+            loading: false,
+            completionTime: null,
+            responseTime: null,
+            error: null,
+          }
+        }
+        return pre
+      },
+      {} as Record<string, QAInfo>
+    )
   )
+  const [selectIds, setSelectIds] = useState<string[]>([])
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    const dbQas = task?.qas || []
-    setQas([...dbQas, { question: '', answer: '', rate: 0 }])
-    setLoading(new Array(dbQas.length + 1).fill(false))
+    const dbQas = (task?.qas || []).map((qa) => ({
+      ...qa,
+      id: qa.id || uuidv4(),
+    }))
+    setQas([
+      ...dbQas,
+      {
+        id: uuidv4(),
+        question: '',
+        answer: '',
+        rate: 0,
+      },
+    ])
+    setInfos((prevInfos) => {
+      return dbQas.reduce(
+        (pre, cur) => {
+          if (!pre[cur.id]) {
+            pre[cur.id] = {
+              loading: false,
+              completionTime: null,
+              responseTime: null,
+              error: null,
+            }
+          }
+          return pre
+        },
+        prevInfos as Record<string, QAInfo>
+      )
+    })
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
@@ -42,31 +108,52 @@ export const useWorkbench = () => {
         const newQas = [...prevQas]
         newQas[index].question = value
         if (index === prevQas.length - 1 && value !== '') {
-          newQas.push({ question: '', answer: '', rate: 0 })
-          setLoading((prevLoading) => [...prevLoading, false])
+          const newQa = {
+            id: uuidv4(),
+            question: '',
+            answer: '',
+            rate: 0,
+            completionTime: null,
+            responseTime: null,
+            error: null,
+          }
+          newQas.push(newQa)
+          setInfos((prevInfos) => ({
+            ...prevInfos,
+            [newQa.id]: {
+              loading: false,
+              error: null,
+              responseTime: null,
+              completionTime: null,
+            },
+          }))
         }
-        db.tasks.update(Number(params.taskId), {
+        db.tasks.update(getTaskIdFromRouteParams(params), {
           qas: newQas.filter((qa) => !!qa.question.trim()),
         })
         return newQas
       })
     },
-    [params.taskId]
+    [params]
   )
 
   const onQuestionRemove = useCallback(
     (index: number) => {
       setQas((prevQas) => {
+        const removedQa = prevQas[index]
         const newQas = prevQas.filter((_, i) => i !== index)
-        setLoading((prevLoading) => prevLoading.filter((_, i) => i !== index))
-        db.tasks.update(Number(params.taskId), {
+        setInfos((prevInfos) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [removedQa.id]: _, ...rest } = prevInfos
+          return rest
+        })
+        db.tasks.update(getTaskIdFromRouteParams(params), {
           qas: newQas.filter((qa) => !!qa.question.trim()),
         })
-        console.log(newQas)
         return newQas
       })
     },
-    [params.taskId]
+    [params]
   )
 
   const onRateChange = useCallback(
@@ -74,16 +161,27 @@ export const useWorkbench = () => {
       setQas((prevQas) => {
         const newQas = [...prevQas]
         newQas[index].rate = value
-        db.tasks.update(Number(params.taskId), {
+        db.tasks.update(getTaskIdFromRouteParams(params), {
           qas: newQas.filter((qa) => !!qa.question.trim()),
         })
         return newQas
       })
     },
-    [params.taskId]
+    [params]
   )
 
-  const onRunAll = useCallback(async () => {
+  const onSelectChange = useCallback(
+    (id: string) => {
+      if (selectIds.includes(id)) {
+        setSelectIds((prevSelectIds) => prevSelectIds.filter((id) => id !== id))
+      } else {
+        setSelectIds((prevSelectIds) => [...prevSelectIds, id])
+      }
+    },
+    [selectIds]
+  )
+
+  const onRun = useCallback(async () => {
     if (
       !task?.openAIOptions?.baseURL ||
       !task?.openAIOptions?.apiKey ||
@@ -123,12 +221,21 @@ export const useWorkbench = () => {
 
     for (let i = 0, len = updatedQas.length; i < len; i++) {
       if (!updatedQas[i].question.trim()) continue
+      if (selectIds.length > 0 && !selectIds.includes(updatedQas[i].id))
+        continue
 
-      setLoading((prevLoading) => {
-        const newLoading = [...prevLoading]
-        newLoading[i] = true
-        return newLoading
-      })
+      const startTime = performance.now()
+
+      setInfos((prevInfos) => ({
+        ...prevInfos,
+        [updatedQas[i].id]: {
+          ...prevInfos[updatedQas[i].id],
+          loading: true,
+          completionTime: null,
+          responseTime: null,
+          error: null,
+        },
+      }))
 
       abortControllerRef.current = new AbortController()
       try {
@@ -152,46 +259,68 @@ export const useWorkbench = () => {
           },
           { signal: abortControllerRef.current.signal }
         )
-        if (task.openAIOptions.params.stream) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          for await (const chunk of response) {
+        setInfos((prevInfos) => ({
+          ...prevInfos,
+          [updatedQas[i].id]: {
+            ...prevInfos[updatedQas[i].id],
+            responseTime: performance.now() - startTime,
+          },
+        }))
+        if (
+          (response as AsyncIterable<ChatCompletionChunk>)[Symbol.asyncIterator]
+        ) {
+          for await (const chunk of response as AsyncIterable<ChatCompletionChunk>) {
             answer += chunk.choices[0]?.delta?.content || ''
             updatedQas[i].answer = answer
             setQas([...updatedQas])
           }
         } else {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          answer = response.choices[0]?.message?.content || ''
+          const nonStreamResponse = response as ChatCompletion
+          answer = nonStreamResponse.choices[0]?.message?.content || ''
           updatedQas[i].answer = answer
           setQas([...updatedQas])
         }
       } catch (error) {
-        console.error(error)
+        setInfos((prevInfos) => ({
+          ...prevInfos,
+          [updatedQas[i].id]: {
+            ...prevInfos[updatedQas[i].id],
+            error: (error as Error).message,
+          },
+        }))
+        updatedQas[i].answer = ''
+        setQas([...updatedQas])
       } finally {
-        setLoading((prevLoading) => {
-          const newLoading = [...prevLoading]
-          newLoading[i] = false
-          return newLoading
-        })
+        setInfos((prevInfos) => ({
+          ...prevInfos,
+          [updatedQas[i].id]: {
+            ...prevInfos[updatedQas[i].id],
+            loading: false,
+            completionTime: performance.now() - startTime,
+          },
+        }))
       }
     }
-    await db.tasks.update(Number(params.taskId), {
+    await db.tasks.update(getTaskIdFromRouteParams(params), {
       qas: updatedQas.filter((qa) => !!qa.question.trim()),
     })
-  }, [task, qas, params.taskId, toast, navigate])
+  }, [task, qas, params, toast, navigate, selectIds])
 
-  const someLoading = useMemo(() => loading.some((l) => l), [loading])
+  const someLoading = useMemo(
+    () => Object.values(infos).some((info) => info.loading),
+    [infos]
+  )
 
   return {
-    loading,
+    infos,
     someLoading,
     task,
     qas,
+    selectIds,
     onQuestionChange,
     onQuestionRemove,
     onRateChange,
-    onRunAll,
+    onRun,
+    onSelectChange,
   }
 }

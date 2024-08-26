@@ -32,20 +32,20 @@ export const TaskList = () => {
     )
   }
 
-  const removeTask = async (evt: MouseEvent, id: number) => {
+  const removeTask = async (evt: MouseEvent, id: number | string) => {
     evt.stopPropagation()
     await db.tasks.delete(id)
     const newTasks = await db.tasks.toArray()
     if (newTasks.length === 0) {
       return navigate('/')
     }
-    if (Number(params.taskId) === id && newTasks.length) {
+    if (params.taskId === `${id}` && newTasks.length) {
       return navigate(`/${newTasks[0].id}`)
     }
   }
 
-  const onCardClick = (id: number) => {
-    if (Number(params.taskId) === id) return
+  const onCardClick = (id: number | string) => {
+    if (params.taskId === `${id}`) return
     navigate(`/${id}`)
   }
 

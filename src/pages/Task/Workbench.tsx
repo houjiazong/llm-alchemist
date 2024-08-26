@@ -5,14 +5,16 @@ import { QAList } from '@/components/QAList'
 
 export const TaskWorkbench = () => {
   const {
-    loading,
+    infos,
     someLoading,
     task,
     qas,
+    selectIds,
     onQuestionChange,
     onQuestionRemove,
     onRateChange,
-    onRunAll,
+    onRun,
+    onSelectChange,
   } = useWorkbench()
   if (!task) {
     return (
@@ -24,22 +26,24 @@ export const TaskWorkbench = () => {
   return (
     <div className="space-y-2">
       <div className="text-right">
-        <Button onClick={onRunAll} disabled={someLoading}>
+        <Button onClick={onRun} disabled={someLoading}>
           {someLoading ? (
             <Loader className="animate-spin w-4 h-4 mr-2" />
           ) : (
             <Play className="h-4 w-4 mr-2" />
           )}
-          Run All
+          {selectIds.length > 0 ? 'Run Selected' : 'Run All'}
         </Button>
       </div>
       <div className="rounded-md border">
         <QAList
           qas={qas}
-          loading={loading}
+          infos={infos}
+          selectIds={selectIds}
           onQuestionChange={onQuestionChange}
           onQuestionRemove={onQuestionRemove}
           onRateChange={onRateChange}
+          onSelectChange={onSelectChange}
         />
       </div>
     </div>

@@ -1,23 +1,29 @@
 import { QA } from '@/db'
 import { QAItem } from './Item'
+import { QAInfo } from '@/hooks/useWorkbench'
 
 interface QAListProps {
   qas: QA[]
-  loading: boolean[]
+  infos: Record<string, QAInfo>
+  selectIds: string[]
   onQuestionChange: (index: number, question: string) => void
   onQuestionRemove: (index: number) => void
   onRateChange: (index: number, rate: number) => void
+  onSelectChange: (id: string) => void
 }
 export const QAList = ({
   qas,
-  loading,
+  infos,
+  selectIds,
   onQuestionChange,
   onQuestionRemove,
   onRateChange,
+  onSelectChange,
 }: QAListProps) => {
   return (
     <>
       <div className="flex">
+        <div className="w-[40px] text-center flex-shrink-0 flex-grow-0 p-2 border-r"></div>
         <div className="w-[60px] text-center flex-shrink-0 flex-grow-0 p-2 border-r">
           Seq
         </div>
@@ -25,10 +31,8 @@ export const QAList = ({
           Question
         </div>
         <div className="flex-1 p-2 border-r">Answer</div>
-        <div className="w-[100px] flex-shrink-0 flex-grow-0 p-2 border-r">
-          Rate
-        </div>
-        <div className="w-[60px] flex-shrink-0 flex-grow-0 p-2"></div>
+        <div className="w-[100px] flex-shrink-0 flex-grow-0 p-2">Rate</div>
+        <div className="w-[40px] flex-shrink-0 flex-grow-0 p-2"></div>
       </div>
       <div>
         {qas.map((qa, index) => {
@@ -37,10 +41,12 @@ export const QAList = ({
               key={index}
               index={index}
               qa={qa}
-              loading={loading[index]}
+              info={infos[qa.id]}
+              selected={selectIds.includes(qa.id)}
               onQuestionChange={onQuestionChange}
               onQuestionRemove={onQuestionRemove}
               onRateChange={onRateChange}
+              onSelectChange={onSelectChange}
             />
           )
         })}

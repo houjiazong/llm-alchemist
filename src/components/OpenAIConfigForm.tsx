@@ -71,7 +71,7 @@ export const OpenAIConfigForm = ({
       params: {
         model: value?.params?.model ?? '',
         prompt: value?.params?.prompt ?? '',
-        max_tokens: value?.params?.max_tokens ?? 1024,
+        max_tokens: value?.params?.max_tokens ?? 200,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? false,
       },
@@ -232,6 +232,12 @@ export const OpenAIConfigForm = ({
                 </FormItem>
               )}
             />
+            <div>
+              <Button type="submit" disabled={submiting} className="w-full">
+                {submiting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save
+              </Button>
+            </div>
           </div>
           <div className="md:order-1">
             <div className="flex flex-col space-y-4">
@@ -242,7 +248,8 @@ export const OpenAIConfigForm = ({
                   <FormItem>
                     <FormControl>
                       <Textarea
-                        className="min-h-[400px] flex-1 p-4 md:min-h-[500px] lg:min-h-[600px]"
+                        // className="min-h-[400px] flex-1 p-4 md:min-h-[500px] lg:min-h-[600px]"
+                        className="h-[420px]"
                         placeholder="Write your prompt here"
                         rows={10}
                         {...field}
@@ -251,14 +258,6 @@ export const OpenAIConfigForm = ({
                   </FormItem>
                 )}
               />
-              <div className="flex items-center">
-                <Button type="submit" disabled={submiting}>
-                  {submiting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Save
-                </Button>
-              </div>
             </div>
           </div>
         </div>

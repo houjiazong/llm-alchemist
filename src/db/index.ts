@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 
 interface QA {
+  id: string
   question: string
   answer?: string
   rate?: string | number
@@ -17,7 +18,7 @@ interface OpenAIOptions {
   }
 }
 interface Task {
-  id: number
+  id: number | string
   name: string
   desc?: string
   created_at: number
@@ -26,7 +27,7 @@ interface Task {
 }
 
 export const DB_STRUCTURE = {
-  tasks: '++id, name, desc, openAIOptions, qas, created_at',
+  tasks: 'id, name, desc, openAIOptions, qas, created_at',
 }
 
 const db = new Dexie('la') as Dexie & {

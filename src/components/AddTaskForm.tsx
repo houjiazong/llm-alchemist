@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { v4 as uuidv4 } from 'uuid'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -29,7 +30,7 @@ const AddTaskFormSchema = z.object({
 })
 
 interface AddTaskFormProps {
-  onSuccess?: (id: number) => void
+  onSuccess?: (id: number | string) => void
 }
 
 export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
@@ -47,6 +48,7 @@ export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
     try {
       const id = await db.tasks.add({
         ...data,
+        id: uuidv4(),
         created_at: Date.now(),
       })
       onSuccess?.(id)
