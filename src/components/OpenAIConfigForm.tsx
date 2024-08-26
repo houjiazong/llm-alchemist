@@ -58,7 +58,7 @@ export const OpenAIConfigForm = ({
       params: {
         model: value?.params?.model ?? '',
         prompt: value?.params?.prompt ?? '',
-        max_tokens: value?.params?.max_tokens ?? 1024,
+        max_tokens: value?.params?.max_tokens ?? 200,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? false,
       },
