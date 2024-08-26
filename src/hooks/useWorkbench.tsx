@@ -156,14 +156,14 @@ export const useWorkbench = () => {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           for await (const chunk of response) {
-            answer += chunk.choices[0].delta?.content || ''
+            answer += chunk.choices[0]?.delta?.content || ''
             updatedQas[i].answer = answer
             setQas([...updatedQas])
           }
         } else {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          answer = response.choices[0].message.content
+          answer = response.choices[0]?.message?.content || ''
           updatedQas[i].answer = answer
           setQas([...updatedQas])
         }
