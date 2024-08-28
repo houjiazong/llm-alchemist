@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useRef } from 'react'
 import { useToast } from '@/components/ui/use-toast'
+import { saveAs } from 'file-saver'
 
 export const DBExportImpot = ({
   onImportSuccess,
@@ -36,12 +37,7 @@ export const DBExportImpot = ({
           return true
         },
       })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'database-export.json'
-      a.click()
-      URL.revokeObjectURL(url)
+      saveAs(blob, 'database-export.json')
     } catch (error) {
       console.error('Export failed: ', error)
     }
@@ -64,7 +60,7 @@ export const DBExportImpot = ({
   }
   const onFileSelect = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.click() // 触发文件选择对话框
+      fileInputRef.current.click()
     }
   }
   return (

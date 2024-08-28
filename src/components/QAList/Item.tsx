@@ -54,7 +54,7 @@ export const QAItem = ({
           className="shadow-none border border-transparent text-sm px-2 py-0.5 text-muted-foreground hover:border-border resize-none"
         />
       </div>
-      <div className="flex-1 p-2 border-r relative flex flex-col space-y-2">
+      <div className="flex-1 p-2 border-r relative flex flex-col">
         {info?.loading && (
           <div className="absolute right-2 top-2">
             {<Loader className="animate-spin w-4 h-4" />}
@@ -66,7 +66,7 @@ export const QAItem = ({
           </Markdown>
         )}
         {info?.error && <div className="text-red-500">{info.error}</div>}
-        <div className="flex space-x-2 text-gray-400 text-xs items-center">
+        <div className="flex space-x-2 text-gray-400 text-xs items-center mt-2">
           {info?.responseTime && (
             <div className="flex space-x-1 items-center">
               <ClockArrowDown className="w-4 h-4" />
