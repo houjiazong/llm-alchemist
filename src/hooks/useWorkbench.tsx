@@ -170,16 +170,15 @@ export const useWorkbench = () => {
     [params]
   )
 
-  const onSelectChange = useCallback(
-    (id: string) => {
-      if (selectIds.includes(id)) {
-        setSelectIds((prevSelectIds) => prevSelectIds.filter((id) => id !== id))
+  const onSelectChange = useCallback((id: string) => {
+    setSelectIds((prevSelectIds) => {
+      if (prevSelectIds.includes(id)) {
+        return prevSelectIds.filter((selectId) => selectId !== id)
       } else {
-        setSelectIds((prevSelectIds) => [...prevSelectIds, id])
+        return [...prevSelectIds, id]
       }
-    },
-    [selectIds]
-  )
+    })
+  }, [])
 
   const onRun = useCallback(async () => {
     if (
