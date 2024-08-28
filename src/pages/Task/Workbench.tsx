@@ -125,13 +125,14 @@ export const TaskWorkbench = () => {
       fileInputRef.current.click()
     }
   }
+  const disabled = exporting || importing || someLoading
   return (
     <div className="space-y-2">
       <div className="text-right space-x-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="secondary" disabled={exporting} onClick={onExport}>
-              {someLoading ? (
+            <Button variant="secondary" disabled={disabled} onClick={onExport}>
+              {exporting ? (
                 <Loader className="animate-spin w-4 h-4 mr-2" />
               ) : (
                 <FileOutput className="h-4 w-4 mr-2" />
@@ -145,7 +146,7 @@ export const TaskWorkbench = () => {
           <TooltipTrigger asChild>
             <Button
               variant="secondary"
-              disabled={importing}
+              disabled={disabled}
               onClick={onFileSelect}
             >
               {importing ? (
@@ -158,7 +159,7 @@ export const TaskWorkbench = () => {
           </TooltipTrigger>
           <TooltipContent>Import excel data to table</TooltipContent>
         </Tooltip>
-        <Button onClick={onRun} disabled={someLoading}>
+        <Button onClick={onRun} disabled={disabled}>
           {someLoading ? (
             <Loader className="animate-spin w-4 h-4 mr-2" />
           ) : (
@@ -172,6 +173,7 @@ export const TaskWorkbench = () => {
           qas={qas}
           infos={infos}
           selectIds={selectIds}
+          disabled={disabled}
           onQuestionChange={onQuestionChange}
           onQuestionRemove={onQuestionRemove}
           onRateChange={onRateChange}

@@ -19,6 +19,7 @@ interface QAItemProps {
   qa: QA
   info: QAInfo
   selected: boolean
+  disabled?: boolean
   onQuestionChange: (index: number, value: string) => void
   onQuestionRemove: (index: number) => void
   onRateChange: (index: number, value: number) => void
@@ -29,6 +30,7 @@ export const QAItem = ({
   qa,
   info,
   selected,
+  disabled,
   onQuestionChange,
   onQuestionRemove,
   onRateChange,
@@ -39,6 +41,7 @@ export const QAItem = ({
       <div className="w-[40px] text-center flex-shrink-0 flex-grow-0 p-2 border-r">
         {qa.question && (
           <Checkbox
+            disabled={disabled}
             checked={selected}
             onCheckedChange={() => onSelectChange(qa.id)}
           />
@@ -51,6 +54,7 @@ export const QAItem = ({
         <TextareaAutosize
           value={qa.question}
           onChange={(e) => onQuestionChange(index, e.target.value)}
+          disabled={disabled}
           className="shadow-none border border-transparent text-sm px-2 py-0.5 text-muted-foreground hover:border-border resize-none"
         />
       </div>
@@ -86,6 +90,7 @@ export const QAItem = ({
           <Select
             value={`${qa.rate}`}
             onValueChange={(value) => onRateChange(index, Number(value))}
+            disabled={disabled}
           >
             <SelectTrigger className="w-full h-6">
               <SelectValue />
@@ -105,7 +110,7 @@ export const QAItem = ({
           variant="ghost"
           size="icon"
           className={cn('hidden h-6 w-6', {
-            'group-hover:inline-flex': !!qa.question,
+            'group-hover:inline-flex': !!qa.question && !disabled,
           })}
           onClick={() => onQuestionRemove(index)}
         >
