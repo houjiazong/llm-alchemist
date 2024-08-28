@@ -40,11 +40,18 @@ export const TaskWorkbench = () => {
   const onExport = async () => {
     setExporting(true)
     try {
-      const exportQas = (qas || []).map((item) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, ...rest } = item
-        return { ...rest }
-      })
+      const exportQas = (qas || [])
+        .filter((item) => {
+          if (selectIds.length > 0) {
+            return selectIds.includes(item.id)
+          }
+          return true
+        })
+        .map((item) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...rest } = item
+          return { ...rest }
+        })
       const worksheet = XLSX.utils.json_to_sheet(exportQas)
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, 'QAS')
@@ -129,7 +136,7 @@ export const TaskWorkbench = () => {
               ) : (
                 <FileOutput className="h-4 w-4 mr-2" />
               )}
-              Export
+              {selectIds.length > 0 ? 'Export Selected' : 'Export All'}
             </Button>
           </TooltipTrigger>
           <TooltipContent>Export table data to excel</TooltipContent>
