@@ -56,23 +56,27 @@ export const TaskList = () => {
           return (
             <Card
               key={task.id}
-              className={cn('group cursor-pointer hover:border-gray-500', {
-                'border-gray-400': params.taskId === task.id.toString(),
-              })}
+              className={cn(
+                'group cursor-pointer hover:border-gray-500 relative',
+                {
+                  'border-gray-400': params.taskId === task.id.toString(),
+                }
+              )}
               onClick={() => onCardClick(task.id)}
             >
               <CardHeader className="p-2">
-                <CardTitle className="text-md flex">
-                  <span className="flex-1 truncate">{task.name}</span>
-                  <CircleX
-                    className="opacity-0 translate-x-1 ml-2 h-4 w-4 text-gray-500 group-hover:opacity-100 group-hover:translate-x-0 hover:text-gray-800 transition-[opacity,transform]"
-                    onClick={(evt) => removeTask(evt, task.id)}
-                  />
+                <CardTitle className="text-md flex items-center space-x-2">
+                  <span className="flex-1 truncate w-0">{task.name}</span>
+                  <span className="text-gray-400 text-xs font-normal flex-shrink-0 flex-grow-0">
+                    {dayjs(task.created_at).fromNow()}
+                  </span>
                 </CardTitle>
-                <CardDescription>
-                  Created {dayjs(task.created_at).fromNow()}
-                </CardDescription>
+                {task.desc && <CardDescription>{task.desc}</CardDescription>}
               </CardHeader>
+              <CircleX
+                className="absolute -right-1 -top-1 rounded-full opacity-0 translate-x-1 ml-2 h-4 w-4 text-primary bg-primary-foreground hover:text-primary-foreground hover:bg-primary group-hover:opacity-100 group-hover:translate-x-0 transition-[opacity,transform]"
+                onClick={(evt) => removeTask(evt, task.id)}
+              />
             </Card>
           )
         })}
