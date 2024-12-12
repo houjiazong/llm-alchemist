@@ -15,6 +15,7 @@ LLM Alchemist 是一个开源工具，旨在通过提示测试来评估大型语
 - **现代技术栈**：使用 Vite、React、TypeScript 构建，提供快速可靠的开发体验。
 - **OpenAI JS API 集成**：无缝与 OpenAI 的 API 交互，获取模型响应。
 - **Vercel 部署支持**：一键部署至 Vercel，轻松将您的工具上线。
+- **自定义品牌标识**: 支持自定义Logo、名称、Favicon、描述，可查看.env.example定义的环境变量
 
 ## 入门指南
 
