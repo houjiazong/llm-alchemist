@@ -15,6 +15,7 @@ LLM Alchemist is an open-source tool designed to evaluate Large Language Models 
 - **Modern Tech Stack**: Built with Vite, React, and TypeScript, offering a fast and reliable development experience.
 - **OpenAI JS API Integration**: Seamless interaction with the OpenAI API to obtain model responses.
 - **Vercel Deployment**: One-click deployment to Vercel, making it easy to bring your tool online.
+- **Customized Brand Identity**: Supports customized Logo, name, Favicon, description, and can modify .env file by yourself
 
 ## Getting Started
 

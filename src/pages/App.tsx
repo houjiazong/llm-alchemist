@@ -17,6 +17,7 @@ import {
 import { useState } from 'react'
 import { DBExportImpot } from '@/components/DBExportImport'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import config from '@/config'
 
 export const App = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -32,15 +33,15 @@ export const App = () => {
             <header className="flex items-center px-4">
               <div className="flex-1">
                 <h2 className="text-lg font-semibold tracking-tight">
-                  LLM Alchemist
+                  {config.app.title}
                 </h2>
                 <div className="text-sm font-light text-muted-foreground">
-                  Evaluate your LLM.
+                  {config.app.description}
                 </div>
               </div>
-              <img
-                src="/logo.svg"
-                className="w-12 filter drop-shadow-[1000px_0_0_hsl(var(--muted-foreground))] transform -translate-x-[1000px]"
+              <div
+                className="bg-no-repeat bg-cover bg-center h-12 w-12"
+                style={{ backgroundImage: `url(${config.app.logo})` }}
               />
             </header>
             <main className="flex-1 h-0">
