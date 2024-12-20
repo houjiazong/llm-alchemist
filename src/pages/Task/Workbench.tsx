@@ -127,8 +127,8 @@ export const TaskWorkbench = () => {
   }
   const disabled = exporting || importing || someLoading
   return (
-    <div className="space-y-2">
-      <div className="text-right space-x-2">
+    <div className="flex flex-col h-full gap-4">
+      <div className="text-right space-x-2 flex-shrink-0 flex-grow-0 px-4">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="secondary" disabled={disabled} onClick={onExport}>
@@ -168,7 +168,7 @@ export const TaskWorkbench = () => {
           {selectIds.length > 0 ? 'Run Selected' : 'Run All'}
         </Button>
       </div>
-      <div className="rounded-md border">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto px-4">
         <QAList
           qas={qas}
           infos={infos}

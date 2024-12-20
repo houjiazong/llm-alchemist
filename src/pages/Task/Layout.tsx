@@ -3,7 +3,6 @@ import {
   NavigationMenuItem,
   NavigationMenuList,
 } from '@/components/ui/navigation-menu'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import {
@@ -26,8 +25,8 @@ export const TaskLayout = () => {
     return cn(defaultClassNames, 'hover:bg-accent hover:text-accent-foreground')
   }
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-center py-4 container">
+    <div className="h-full flex flex-col gap-4">
+      <div className="flex justify-center pt-4 container flex-shrink-0 flex-grow-0">
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
@@ -50,11 +49,9 @@ export const TaskLayout = () => {
         </NavigationMenu>
       </div>
       <Separator />
-      <ScrollArea className="flex-1 h-0">
-        <div className="container h-full py-4">
-          <Outlet />
-        </div>
-      </ScrollArea>
+      <div className="flex-1 overflow-x-hidden overflow-y-auto pb-4">
+        <Outlet />
+      </div>
     </div>
   )
 }

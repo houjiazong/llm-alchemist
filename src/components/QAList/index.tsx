@@ -23,7 +23,7 @@ export const QAList = ({
   onSelectChange,
 }: QAListProps) => {
   return (
-    <>
+    <div className="border rounded">
       <div className="flex">
         <div className="w-[40px] text-center flex-shrink-0 flex-grow-0 p-2 border-r"></div>
         <div className="w-[60px] text-center flex-shrink-0 flex-grow-0 p-2 border-r">
@@ -54,7 +54,7 @@ export const QAList = ({
           )
         })}
       </div>
-    </>
+    </div>
   )
 }
 
