@@ -1,6 +1,6 @@
 import { ModeToggle } from '@/components/ModeToggle'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { TaskList } from '@/components/TaskList'
 import { Button } from '@/components/ui/button'
@@ -15,16 +15,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useState } from 'react'
-import { DBExportImpot } from '@/components/DBExportImport'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import config from '@/config'
+import { TaskExport } from '@/components/TaskExport'
+import { TaskImport } from '@/components/TaskImport'
 
 export const App = () => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const navigate = useNavigate()
-  const onImportSuccess = () => {
-    console.log(23123)
-  }
+  const { taskId } = useParams()
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <TooltipProvider delayDuration={0}>
@@ -48,9 +47,13 @@ export const App = () => {
               <TaskList />
             </main>
             <footer className="flex items-center px-4">
-              <div className="flex-1 flex space-x-2">
-                <ModeToggle />
-                <DBExportImpot onImportSuccess={onImportSuccess} />
+              <div className="flex-1 flex gap-2">
+                <TaskExport taskId={taskId} />
+                <TaskImport
+                  onSuccess={(id) => {
+                    navigate(`/${id}/settings`)
+                  }}
+                />
               </div>
               <div className="flex-shrink-0 flex-grow-0">
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -76,7 +79,10 @@ export const App = () => {
               </div>
             </footer>
           </aside>
-          <main className="flex-1 flex flex-col">
+          <main className="flex-1 flex flex-col relative">
+            <div className="absolute right-4 top-4">
+              <ModeToggle />
+            </div>
             <Outlet />
           </main>
         </div>

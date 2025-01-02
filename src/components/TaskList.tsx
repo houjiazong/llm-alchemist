@@ -14,7 +14,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { type MouseEvent } from 'react'
 
 export const TaskList = () => {
-  const tasks = useLiveQuery(() => db.tasks.toArray())
+  const tasks = useLiveQuery(() =>
+    db.tasks.orderBy('created_at').reverse().toArray()
+  )
   const params = useParams()
   const navigate = useNavigate()
   if (!tasks) {
@@ -35,7 +37,7 @@ export const TaskList = () => {
   const removeTask = async (evt: MouseEvent, id: number | string) => {
     evt.stopPropagation()
     await db.tasks.delete(id)
-    const newTasks = await db.tasks.toArray()
+    const newTasks = await db.tasks.orderBy('created_at').reverse().toArray()
     if (newTasks.length === 0) {
       return navigate('/')
     }
