@@ -8,9 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 
 // id类型的过渡兼容，后期应该全为string类型的uuid
 export function getTaskIdFromRouteParams(params: Params) {
-  const id =
-    params.taskId && params.taskId.includes('-')
-      ? params.taskId
-      : Number(params.taskId)
-  return id
+  if (params.taskId) {
+    if (params.taskId.includes('-')) {
+      return params.taskId
+    }
+    const nid = Number(params.taskId)
+    if (!isNaN(nid)) {
+      return nid
+    }
+    return params.taskId
+  }
+  return ''
 }

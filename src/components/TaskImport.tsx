@@ -34,7 +34,6 @@ export function TaskImport({ onSuccess }: TaskImportProps) {
       const data: TaskImportData = JSON.parse(jsonTxt)
       if (data) {
         const id = await db.tasks.add({
-          ...data,
           id: uuidv4(),
           created_at: Date.now(),
           desc: data.desc ?? '',

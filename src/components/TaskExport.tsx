@@ -9,7 +9,7 @@ import saveAs from 'file-saver'
 export function TaskExport({ taskId }: { taskId?: string }) {
   const { toast } = useToast()
   const currentTask = useLiveQuery(
-    () => db.tasks.where({ id: taskId }).first(),
+    () => db.tasks.where({ id: taskId || '' }).first(),
     [taskId]
   )
 
