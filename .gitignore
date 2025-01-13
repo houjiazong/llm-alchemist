@@ -30,3 +30,4 @@ dev.proxy.config.js
 # package manager
 package-lock.json
 yarn.lock
+.vercel
