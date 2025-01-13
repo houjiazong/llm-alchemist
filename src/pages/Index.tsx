@@ -1,5 +1,4 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Loader } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -15,16 +14,12 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
 export const Index = () => {
-  const tasks = useLiveQuery(() => db.tasks.toArray())
+  const tasks = useLiveQuery(() =>
+    db.tasks.orderBy('created_at').reverse().toArray()
+  )
   const [dialogOpen, setDialogOpen] = useState(false)
   const navigate = useNavigate()
-  if (!tasks)
-    return (
-      <div className="h-full flex items-center justify-center">
-        <Loader className="animate-spin" />
-      </div>
-    )
-  if (tasks.length === 0) {
+  if (!tasks || tasks.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center">
         <h1 className="text-2xl font-bold">No Tasks yet</h1>
@@ -53,5 +48,5 @@ export const Index = () => {
       </div>
     )
   }
-  return <Navigate to={`/${tasks[0].id}`} />
+  return <Navigate to={`/${tasks[0].id}/workbench`} />
 }

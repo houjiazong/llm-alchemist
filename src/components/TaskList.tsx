@@ -42,13 +42,13 @@ export const TaskList = () => {
       return navigate('/')
     }
     if (params.taskId === `${id}` && newTasks.length) {
-      return navigate(`/${newTasks[0].id}`)
+      return navigate(`/${newTasks[0].id}/workbench`)
     }
   }
 
   const onCardClick = (id: number | string) => {
     if (params.taskId === `${id}`) return
-    navigate(`/${id}`)
+    navigate(`/${id}/workbench`)
   }
 
   return (

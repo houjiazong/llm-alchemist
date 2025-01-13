@@ -24,8 +24,9 @@ export const useWorkbench = () => {
   const { toast } = useToast()
   const navigate = useNavigate()
   const params = useParams()
-  const task = useLiveQuery(() =>
-    db.tasks.get(getTaskIdFromRouteParams(params))
+  const task = useLiveQuery(
+    () => db.tasks.get(getTaskIdFromRouteParams(params)),
+    [params.taskId]
   )
 
   // init qas

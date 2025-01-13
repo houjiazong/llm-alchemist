@@ -6,18 +6,20 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { db } from '@/db'
 import { cn } from '@/lib/utils'
-import { useEffect } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import {
   NavLink,
   NavLinkRenderProps,
   Outlet,
-  useNavigate,
   useParams,
 } from 'react-router-dom'
 
 export const TaskLayout = () => {
   const params = useParams()
-  const navigate = useNavigate()
+  const task = useLiveQuery(
+    () => db.tasks.where({ id: params.taskId }).first(),
+    [params.taskId]
+  )
   const getNavLinkClassName = ({ isActive }: NavLinkRenderProps) => {
     const defaultClassNames =
       'inline-flex items-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 justify-start px-3 h-9 rounded-md'
@@ -28,15 +30,13 @@ export const TaskLayout = () => {
       )
     return cn(defaultClassNames, 'hover:bg-accent hover:text-accent-foreground')
   }
-  useEffect(() => {
-    const checkTask = async () => {
-      const task = await db.tasks.where({ id: params.taskId }).first()
-      if (!task) {
-        navigate('/')
-      }
-    }
-    checkTask()
-  }, [navigate, params.taskId])
+  if (!task) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        No data found.
+      </div>
+    )
+  }
   return (
     <div className="h-full flex flex-col gap-4">
       <div className="flex justify-center pt-4 container flex-shrink-0 flex-grow-0">

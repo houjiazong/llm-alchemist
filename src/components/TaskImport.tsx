@@ -48,6 +48,10 @@ export function TaskImport({ onSuccess }: TaskImportProps) {
       }
     } catch (error) {
       console.error(error)
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
   return (
