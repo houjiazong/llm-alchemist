@@ -20,6 +20,7 @@ interface QAItemProps {
   info: QAInfo
   selected: boolean
   disabled?: boolean
+  formatOutput?: boolean
   onQuestionChange: (index: number, value: string) => void
   onQuestionRemove: (index: number) => void
   onRateChange: (index: number, value: number) => void
@@ -31,6 +32,7 @@ export const QAItem = ({
   info,
   selected,
   disabled,
+  formatOutput,
   onQuestionChange,
   onQuestionRemove,
   onRateChange,
@@ -64,10 +66,12 @@ export const QAItem = ({
             {<Loader className="animate-spin w-4 h-4" />}
           </div>
         )}
-        {qa.answer && (
+        {qa.answer && formatOutput ? (
           <Markdown className="prose prose-sm dark:prose-invert">
             {qa.answer}
           </Markdown>
+        ) : (
+          qa.answer
         )}
         {info?.error && <div className="text-red-500">{info.error}</div>}
         <div className="flex space-x-2 text-gray-400 text-xs items-center mt-2">

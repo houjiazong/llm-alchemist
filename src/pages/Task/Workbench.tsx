@@ -12,6 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Checkbox } from '@/components/ui/checkbox'
 
 export const TaskWorkbench = () => {
   const {
@@ -28,6 +29,7 @@ export const TaskWorkbench = () => {
   } = useWorkbench()
   const [exporting, setExporting] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [formatOutput, setFormatOutput] = useState(true)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { toast } = useToast()
   if (!task) {
@@ -128,7 +130,22 @@ export const TaskWorkbench = () => {
   const disabled = exporting || importing || someLoading
   return (
     <div className="flex flex-col h-full gap-4">
-      <div className="text-right space-x-2 flex-shrink-0 flex-grow-0 px-4">
+      <div className="flex-shrink-0 flex-grow-0 px-4 flex items-center justify-end gap-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="format-output"
+            checked={formatOutput}
+            onCheckedChange={(value) => {
+              setFormatOutput(value as boolean)
+            }}
+          />
+          <label
+            htmlFor="format-output"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Format output
+          </label>
+        </div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="secondary" disabled={disabled} onClick={onExport}>
@@ -174,6 +191,7 @@ export const TaskWorkbench = () => {
           infos={infos}
           selectIds={selectIds}
           disabled={disabled}
+          formatOutput={formatOutput}
           onQuestionChange={onQuestionChange}
           onQuestionRemove={onQuestionRemove}
           onRateChange={onRateChange}

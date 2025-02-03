@@ -7,6 +7,7 @@ interface QAListProps {
   infos: Record<string, QAInfo>
   selectIds: string[]
   disabled?: boolean
+  formatOutput?: boolean
   onQuestionChange: (index: number, question: string) => void
   onQuestionRemove: (index: number) => void
   onRateChange: (index: number, rate: number) => void
@@ -17,6 +18,7 @@ export const QAList = ({
   infos,
   selectIds,
   disabled,
+  formatOutput,
   onQuestionChange,
   onQuestionRemove,
   onRateChange,
@@ -46,6 +48,7 @@ export const QAList = ({
               info={infos[qa.id]}
               selected={selectIds.includes(qa.id)}
               disabled={disabled}
+              formatOutput={formatOutput}
               onQuestionChange={onQuestionChange}
               onQuestionRemove={onQuestionRemove}
               onRateChange={onRateChange}
