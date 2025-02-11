@@ -52,7 +52,7 @@ export const QAItem = ({
       <div className="w-[60px] text-center flex-shrink-0 flex-grow-0 p-2 border-r">
         {index + 1}
       </div>
-      <div className="w-[200px] flex-shrink-0 flex-grow-0 p-2 border-r">
+      <div className="w-1/2 flex-shrink-0 flex-grow-0 p-2 border-r">
         <TextareaAutosize
           value={qa.question}
           onChange={(e) => onQuestionChange(index, e.target.value)}

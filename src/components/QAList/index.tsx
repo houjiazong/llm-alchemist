@@ -31,7 +31,7 @@ export const QAList = ({
         <div className="w-[60px] text-center flex-shrink-0 flex-grow-0 p-2 border-r">
           Seq
         </div>
-        <div className="w-[200px] flex-shrink-0 flex-grow-0 p-2 border-r">
+        <div className="w-1/2 flex-shrink-0 flex-grow-0 p-2 border-r">
           Question
         </div>
         <div className="flex-1 p-2 border-r">Answer</div>
