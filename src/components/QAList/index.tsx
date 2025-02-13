@@ -97,63 +97,6 @@ export const QAList = ({
         accessorKey: 'answer',
         id: 'answer',
         size: 300,
-        cell: (info) => {
-          const rowInfo = infos[info.row.original.id] || {}
-          const timeInfo = (
-            <div className="flex space-x-2 text-gray-400 text-xs items-center mt-2">
-              {rowInfo?.responseTime && (
-                <div className="flex space-x-1 items-center">
-                  <ClockArrowDown className="w-4 h-4" />
-                  <span>
-                    Response Time: {rowInfo.responseTime.toFixed(0)}ms
-                  </span>
-                </div>
-              )}
-              {rowInfo?.completionTime && (
-                <div className="flex space-x-1 items-center">
-                  <Clock className="w-4 h-4" />
-                  <span>
-                    Completion Time: {rowInfo.completionTime.toFixed(0)}ms
-                  </span>
-                </div>
-              )}
-            </div>
-          )
-          if (rowInfo.loading) {
-            return (
-              <>
-                <Loader className="animate-spin w-4 h-4" />
-                {timeInfo}
-              </>
-            )
-          }
-          if (info.row.original.answer) {
-            if (formatOutput) {
-              return (
-                <>
-                  <Markdown className="prose prose-sm dark:prose-invert">
-                    {info.row.original.answer}
-                  </Markdown>
-                  {timeInfo}
-                </>
-              )
-            }
-            return (
-              <>
-                {info.row.original.answer}
-                {timeInfo}
-              </>
-            )
-          }
-          if (rowInfo.error) {
-            return (
-              <>
-                <div className="text-red-500">{rowInfo.error}</div>
-                {timeInfo}
-              </>
-            )
-          }
-        },
       },
       {
         header: 'Rate',
@@ -191,18 +134,21 @@ export const QAList = ({
         header: ' ',
         accessorKey: '_del',
         id: '_del',
-        size: 80,
-        minSize: 80,
+        size: 30,
+        minSize: 30,
         enableResizing: false,
         cell: (info) => {
           return (
             <Button
               variant="ghost"
               size="icon"
-              className={cn('hidden h-6 w-6', {
-                'group-hover:inline-flex':
-                  !!info.row.original.question && !disabled,
-              })}
+              className={cn(
+                'hidden h-6 w-6 absolute -mt-3 -ml-3 top-1/2 left-1/2',
+                {
+                  'group-hover:block':
+                    !!info.row.original.question && !disabled,
+                }
+              )}
               onClick={() => onQuestionRemove(info.row.index)}
             >
               <CircleX className="w-4 h-4" />
@@ -217,8 +163,6 @@ export const QAList = ({
     selectIds,
     onSelectChange,
     onQuestionChange,
-    infos,
-    formatOutput,
     onRateChange,
     onQuestionRemove,
   ])
@@ -230,6 +174,60 @@ export const QAList = ({
     columnResizeDirection: 'ltr',
     getCoreRowModel: getCoreRowModel(),
   })
+
+  const renderAnswer = (row: QA) => {
+    const rowInfo = infos[row.id] || {}
+    const timeInfo = (
+      <div className="flex space-x-2 text-gray-400 text-xs items-center mt-2">
+        {rowInfo?.responseTime && (
+          <div className="flex space-x-1 items-center">
+            <ClockArrowDown className="w-4 h-4" />
+            <span>Response Time: {rowInfo.responseTime.toFixed(0)}ms</span>
+          </div>
+        )}
+        {rowInfo?.completionTime && (
+          <div className="flex space-x-1 items-center">
+            <Clock className="w-4 h-4" />
+            <span>Completion Time: {rowInfo.completionTime.toFixed(0)}ms</span>
+          </div>
+        )}
+      </div>
+    )
+    if (rowInfo.loading) {
+      return (
+        <>
+          <Loader className="animate-spin w-4 h-4" />
+          {timeInfo}
+        </>
+      )
+    }
+    if (row.answer) {
+      if (formatOutput) {
+        return (
+          <>
+            <Markdown className="prose prose-sm dark:prose-invert">
+              {row.answer}
+            </Markdown>
+            {timeInfo}
+          </>
+        )
+      }
+      return (
+        <>
+          {row.answer}
+          {timeInfo}
+        </>
+      )
+    }
+    if (rowInfo.error) {
+      return (
+        <>
+          <div className="text-red-500">{rowInfo.error}</div>
+          {timeInfo}
+        </>
+      )
+    }
+  }
 
   return (
     <Table className="border">
@@ -277,16 +275,18 @@ export const QAList = ({
       <TableBody>
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} className="group">
               {row.getVisibleCells().map((cell) => (
                 <TableCell
-                  className="border"
+                  className="border relative"
                   key={cell.id}
                   style={{
                     width: cell.column.getSize(),
                   }}
                 >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  {cell.column.id === 'answer'
+                    ? renderAnswer(cell.row.original)
+                    : flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
             </TableRow>
