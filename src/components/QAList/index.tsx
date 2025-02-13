@@ -1,6 +1,34 @@
 import { QA } from '@/db'
-import { QAItem } from './Item'
 import { QAInfo } from '@/hooks/useWorkbench'
+
+import {
+  useReactTable,
+  getCoreRowModel,
+  ColumnDef,
+  flexRender,
+} from '@tanstack/react-table'
+import { Checkbox } from '../ui/checkbox'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../ui/table'
+import { TextareaAutosize } from '../ui/textarea-autosize'
+import { useMemo } from 'react'
+import { CircleX, Clock, ClockArrowDown, Loader } from 'lucide-react'
+import Markdown from 'react-markdown'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
+import { Button } from '../ui/button'
+import { cn } from '@/lib/utils'
 
 interface QAListProps {
   qas: QA[]
@@ -13,6 +41,7 @@ interface QAListProps {
   onRateChange: (index: number, rate: number) => void
   onSelectChange: (id: string) => void
 }
+
 export const QAList = ({
   qas,
   infos,
@@ -24,40 +53,254 @@ export const QAList = ({
   onRateChange,
   onSelectChange,
 }: QAListProps) => {
-  return (
-    <div className="border rounded">
-      <div className="flex">
-        <div className="w-[40px] text-center flex-shrink-0 flex-grow-0 p-2 border-r"></div>
-        <div className="w-[60px] text-center flex-shrink-0 flex-grow-0 p-2 border-r">
-          Seq
-        </div>
-        <div className="w-1/2 flex-shrink-0 flex-grow-0 p-2 border-r">
-          Question
-        </div>
-        <div className="flex-1 p-2 border-r">Answer</div>
-        <div className="w-[100px] flex-shrink-0 flex-grow-0 p-2">Rate</div>
-        <div className="w-[40px] flex-shrink-0 flex-grow-0 p-2"></div>
-      </div>
-      <div>
-        {qas.map((qa, index) => {
-          return (
-            <QAItem
-              key={index}
-              index={index}
-              qa={qa}
-              info={infos[qa.id]}
-              selected={selectIds.includes(qa.id)}
-              disabled={disabled}
-              formatOutput={formatOutput}
-              onQuestionChange={onQuestionChange}
-              onQuestionRemove={onQuestionRemove}
-              onRateChange={onRateChange}
-              onSelectChange={onSelectChange}
-            />
+  const columns = useMemo(() => {
+    const result: ColumnDef<QA>[] = [
+      {
+        header: ' ',
+        accessorKey: '_check',
+        id: '_check',
+        size: 40,
+        minSize: 40,
+        enableResizing: false,
+        cell: (info) => (
+          <Checkbox
+            disabled={disabled}
+            checked={selectIds.includes(info.row.original.id)}
+            onCheckedChange={() => onSelectChange(info.row.original.id)}
+          />
+        ),
+      },
+      {
+        header: 'Seq',
+        id: 'seq',
+        cell: (info) => info.row.index + 1,
+        size: 40,
+        minSize: 40,
+        enableResizing: false,
+      },
+      {
+        header: 'Question',
+        accessorKey: 'question',
+        id: 'question',
+        cell: (info) => (
+          <TextareaAutosize
+            value={info.row.original.question}
+            onChange={(e) => onQuestionChange(info.row.index, e.target.value)}
+            disabled={disabled}
+            className="shadow-none border border-transparent text-sm px-2 py-0.5 text-muted-foreground hover:border-border resize-none"
+          />
+        ),
+      },
+      {
+        header: 'Answer',
+        accessorKey: 'answer',
+        id: 'answer',
+        cell: (info) => {
+          const rowInfo = infos[info.row.original.id] || {}
+          const timeInfo = (
+            <div className="flex space-x-2 text-gray-400 text-xs items-center mt-2">
+              {rowInfo?.responseTime && (
+                <div className="flex space-x-1 items-center">
+                  <ClockArrowDown className="w-4 h-4" />
+                  <span>
+                    Response Time: {rowInfo.responseTime.toFixed(0)}ms
+                  </span>
+                </div>
+              )}
+              {rowInfo?.completionTime && (
+                <div className="flex space-x-1 items-center">
+                  <Clock className="w-4 h-4" />
+                  <span>
+                    Completion Time: {rowInfo.completionTime.toFixed(0)}ms
+                  </span>
+                </div>
+              )}
+            </div>
           )
-        })}
-      </div>
-    </div>
+          if (rowInfo.loading) {
+            return (
+              <>
+                <Loader className="animate-spin w-4 h-4" />
+                {timeInfo}
+              </>
+            )
+          }
+          if (info.row.original.answer) {
+            if (formatOutput) {
+              return (
+                <>
+                  <Markdown className="prose prose-sm dark:prose-invert">
+                    {info.row.original.answer}
+                  </Markdown>
+                  {timeInfo}
+                </>
+              )
+            }
+            return (
+              <>
+                {info.row.original.answer}
+                {timeInfo}
+              </>
+            )
+          }
+          if (rowInfo.error) {
+            return (
+              <>
+                <div className="text-red-500">{rowInfo.error}</div>
+                {timeInfo}
+              </>
+            )
+          }
+        },
+      },
+      {
+        header: 'Rate',
+        accessorKey: 'rate',
+        id: 'rate',
+        size: 80,
+        minSize: 80,
+        enableResizing: false,
+        cell: (info) => {
+          if (info.row.original.question && info.row.original.answer) {
+            return (
+              <Select
+                value={`${info.row.original.rate}`}
+                onValueChange={(value) =>
+                  onRateChange(info.row.index, Number(value))
+                }
+                disabled={disabled}
+              >
+                <SelectTrigger className="w-full h-6">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((item) => (
+                    <SelectItem key={item} value={`${item}`}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )
+          }
+        },
+      },
+      {
+        header: ' ',
+        accessorKey: '_del',
+        id: '_del',
+        size: 80,
+        minSize: 80,
+        enableResizing: false,
+        cell: (info) => {
+          return (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('hidden h-6 w-6', {
+                'group-hover:inline-flex':
+                  !!info.row.original.question && !disabled,
+              })}
+              onClick={() => onQuestionRemove(info.row.index)}
+            >
+              <CircleX className="w-4 h-4" />
+            </Button>
+          )
+        },
+      },
+    ]
+    return result
+  }, [
+    disabled,
+    selectIds,
+    onSelectChange,
+    onQuestionChange,
+    infos,
+    formatOutput,
+    onRateChange,
+    onQuestionRemove,
+  ])
+
+  const table = useReactTable({
+    data: qas,
+    columns,
+    columnResizeMode: 'onChange',
+    columnResizeDirection: 'ltr',
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  return (
+    <Table className="border">
+      <TableHeader>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => {
+              return (
+                <TableHead
+                  className="relative group border"
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  style={{
+                    width: header.getSize(),
+                  }}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                  {header.column.getCanResize() && (
+                    <div
+                      {...{
+                        onDoubleClick: () => header.column.resetSize(),
+                        onMouseDown: header.getResizeHandler(),
+                        onTouchStart: header.getResizeHandler(),
+                      }}
+                      className={cn(
+                        'absolute top-1 bottom-1 w-1 bg-gray-200 cursor-col-resize select-none touch-none right-0 opacity-0 group-hover:opacity-100 dark:bg-slate-600',
+                        table.options.columnResizeDirection,
+                        {
+                          'opacity-100': header.column.getIsResizing(),
+                        }
+                      )}
+                    />
+                  )}
+                </TableHead>
+              )
+            })}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows?.length ? (
+          table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell
+                  className="border"
+                  key={cell.id}
+                  style={{
+                    width: cell.column.getSize(),
+                  }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell
+              colSpan={columns.length}
+              className="h-24 text-center border"
+            >
+              No results.
+            </TableCell>
+          </TableRow>
+        )}
+      </TableBody>
+    </Table>
   )
 }
 
