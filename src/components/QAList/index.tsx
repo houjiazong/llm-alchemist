@@ -82,6 +82,7 @@ export const QAList = ({
         header: 'Question',
         accessorKey: 'question',
         id: 'question',
+        size: 300,
         cell: (info) => (
           <TextareaAutosize
             value={info.row.original.question}
@@ -95,6 +96,7 @@ export const QAList = ({
         header: 'Answer',
         accessorKey: 'answer',
         id: 'answer',
+        size: 300,
         cell: (info) => {
           const rowInfo = infos[info.row.original.id] || {}
           const timeInfo = (
