@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '../ui/table'
 import { TextareaAutosize } from '../ui/textarea-autosize'
-import { useMemo } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { CircleX, Clock, ClockArrowDown, Loader } from 'lucide-react'
 import Markdown from 'react-markdown'
 import {
@@ -176,9 +176,13 @@ export const QAList = ({
   })
 
   const renderAnswer = (row: QA) => {
+    const ret: ReactNode[] = []
     const rowInfo = infos[row.id] || {}
     const timeInfo = (
-      <div className="flex space-x-2 text-gray-400 text-xs items-center mt-2">
+      <div
+        className="flex space-x-2 text-gray-400 text-xs items-center mt-2"
+        key="response-info"
+      >
         {rowInfo?.responseTime && (
           <div className="flex space-x-1 items-center">
             <ClockArrowDown className="w-4 h-4" />
@@ -194,39 +198,31 @@ export const QAList = ({
       </div>
     )
     if (rowInfo.loading) {
-      return (
-        <>
-          <Loader className="animate-spin w-4 h-4" />
-          {timeInfo}
-        </>
-      )
+      ret.push(<Loader className="animate-spin w-4 h-4" key="loading" />)
     }
     if (row.answer) {
       if (formatOutput) {
-        return (
-          <>
-            <Markdown className="prose prose-sm dark:prose-invert">
-              {row.answer}
-            </Markdown>
-            {timeInfo}
-          </>
+        ret.push(
+          <Markdown
+            className="prose prose-sm dark:prose-invert"
+            key="answer-format"
+          >
+            {row.answer}
+          </Markdown>
         )
+      } else {
+        ret.push(<div key="answer">{row.answer}</div>)
       }
-      return (
-        <>
-          {row.answer}
-          {timeInfo}
-        </>
-      )
     }
     if (rowInfo.error) {
-      return (
-        <>
-          <div className="text-red-500">{rowInfo.error}</div>
-          {timeInfo}
-        </>
+      ret.push(
+        <div className="text-red-500" key="error">
+          {rowInfo.error}
+        </div>
       )
     }
+    ret.push(timeInfo)
+    return <div className="relative">{ret}</div>
   }
 
   return (
