@@ -28,7 +28,8 @@ const openAIConfigSchema = z.object({
       .number()
       .int()
       .min(1, { message: 'Max tokens must be greater than 0' })
-      .max(4096, { message: 'Max tokens must be less than or equal to 4096' }),
+      .max(8192, { message: 'Max tokens must be less than or equal to 8192' })
+      .optional(),
     temperature: z
       .number()
       .min(0, { message: 'Temperature must be between 0 and 1' })
@@ -58,7 +59,7 @@ export const OpenAIConfigForm = ({
       params: {
         model: value?.params?.model ?? '',
         prompt: value?.params?.prompt ?? '',
-        max_tokens: value?.params?.max_tokens ?? 200,
+        max_tokens: value?.params?.max_tokens,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? false,
       },
@@ -71,7 +72,7 @@ export const OpenAIConfigForm = ({
       params: {
         model: value?.params?.model ?? '',
         prompt: value?.params?.prompt ?? '',
-        max_tokens: value?.params?.max_tokens ?? 200,
+        max_tokens: value?.params?.max_tokens,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? false,
       },
@@ -162,7 +163,7 @@ export const OpenAIConfigForm = ({
               name="params.temperature"
               render={({ field }) => (
                 <FormItem className="grid gap-4 space-y-0">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between h-7">
                     <FormLabel>Temperature</FormLabel>
                     <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
                       {field.value}
@@ -185,31 +186,25 @@ export const OpenAIConfigForm = ({
               name="params.max_tokens"
               render={({ field }) => (
                 <FormItem className="grid gap-4 space-y-0">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between h-7">
                     <FormLabel>Max Tokens</FormLabel>
+                    <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                      {field.value}
+                    </span>
+                  </div>
+                  <FormControl>
                     <Input
-                      className="h-6 w-20 shadow-none border border-transparent text-right text-sm px-2 py-0.5 text-muted-foreground hover:border-border"
-                      dir="rtl"
                       type="number"
-                      min={1}
-                      max={4096}
+                      max={8192}
                       step={1}
                       value={field.value}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value, 10)
-                        if (!isNaN(value)) {
-                          field.onChange(value)
+                        let value = parseInt(e.target.value, 10)
+                        if (value > 8192) {
+                          value = 8192
                         }
+                        field.onChange(value || undefined)
                       }}
-                    />
-                  </div>
-                  <FormControl>
-                    <Slider
-                      min={1}
-                      max={4096}
-                      step={1}
-                      value={[field.value]}
-                      onValueChange={(value) => field.onChange(Number(value))}
                     />
                   </FormControl>
                 </FormItem>
