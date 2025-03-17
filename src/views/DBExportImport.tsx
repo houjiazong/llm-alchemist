@@ -14,8 +14,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useRef } from 'react'
-import { useToast } from '@/components/ui/use-toast'
 import { saveAs } from 'file-saver'
+import { toast } from 'sonner'
 
 export const DBExportImpot = ({
   onImportSuccess,
@@ -23,7 +23,6 @@ export const DBExportImpot = ({
   onImportSuccess: () => void
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const { toast } = useToast()
 
   const onExport = async () => {
     try {
@@ -48,8 +47,7 @@ export const DBExportImpot = ({
     if (file) {
       try {
         await importInto(db, file)
-        toast({
-          title: 'Import successful',
+        toast('Import successful', {
           description: 'Import successful, please continue your operation.',
         })
         onImportSuccess?.()
