@@ -1,10 +1,14 @@
 import { FileInputIcon } from 'lucide-react'
-import { Button } from './ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { useToast } from './ui/use-toast'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useRef } from 'react'
 import { db, type OpenAIOptions } from '@/db'
 import { v4 as uuidv4 } from 'uuid'
+import { toast } from 'sonner'
 
 interface TaskImportData {
   name: string
@@ -19,15 +23,12 @@ interface TaskImportProps {
 
 export function TaskImport({ onSuccess }: TaskImportProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const { toast } = useToast()
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0]
     if (!file) {
-      return toast({
-        description: 'Please select a file.',
-      })
+      return toast('Please select a file.')
     }
     try {
       const jsonTxt = await file.text()

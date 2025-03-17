@@ -10,7 +10,7 @@ interface OpenAIOptions {
   baseURL: string
   apiKey: string
   params: {
-    model: string
+    model?: string
     prompt?: string
     max_tokens?: number
     temperature?: number

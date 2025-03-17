@@ -1,10 +1,9 @@
 import { FileInput, FileOutput, Loader, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/hooks/useWorkbench'
-import { QAList } from '@/components/QAList'
+import { QAList } from '@/views/QAList'
 import { useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
-import { useToast } from '@/components/ui/use-toast'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '@/db'
 import {
@@ -13,6 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Checkbox } from '@/components/ui/checkbox'
+import { toast } from 'sonner'
 
 export const TaskWorkbench = () => {
   const {
@@ -31,7 +31,6 @@ export const TaskWorkbench = () => {
   const [importing, setImporting] = useState(false)
   const [formatOutput, setFormatOutput] = useState(true)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const { toast } = useToast()
   if (!task) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -79,10 +78,8 @@ export const TaskWorkbench = () => {
         headers[1] !== 'answer' ||
         headers[2] !== 'rate'
       ) {
-        return toast({
-          title: 'Invalid format',
+        return toast.warning('Invalid format', {
           description: 'The table must have headers: question, answer, rate.',
-          variant: 'destructive',
         })
       }
       const formattedQas = importedQas
@@ -114,8 +111,7 @@ export const TaskWorkbench = () => {
           ],
         })
       }
-      toast({
-        title: 'Import successful',
+      toast.success('Import successful', {
         description: `${formattedQas.length} records have been imported.`,
       })
     } finally {
@@ -176,7 +172,7 @@ export const TaskWorkbench = () => {
           </TooltipTrigger>
           <TooltipContent>Import excel data to table</TooltipContent>
         </Tooltip>
-        <Button onClick={onRun} disabled={disabled}>
+        <Button onClick={() => onRun()} disabled={disabled}>
           {someLoading ? (
             <Loader className="animate-spin w-4 h-4 mr-2" />
           ) : (
@@ -196,6 +192,7 @@ export const TaskWorkbench = () => {
           onQuestionRemove={onQuestionRemove}
           onRateChange={onRateChange}
           onSelectChange={onSelectChange}
+          onRun={onRun}
         />
       </div>
       <input

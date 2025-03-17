@@ -1,11 +1,12 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { App } from '@/pages/App'
-import { NotFound } from '@/pages/NotFound'
-import { Index } from '@/pages/Index'
-import { ErrorPage } from '@/pages/ErrorPage'
-import { TaskLayout } from '@/pages/Task/Layout'
-import { TaskSettings } from '@/pages/Task/Settings'
-import { TaskWorkbench } from '@/pages/Task/Workbench'
+import { App } from './App'
+import { NotFound } from './NotFound'
+import { Home } from './Home'
+import { ErrorPage } from './ErrorPage'
+import { TaskLayout } from './Task/Layout'
+import { TaskSettings } from './Task/Settings'
+import { TaskWorkbench } from './Task/Workbench'
+import { QuickStart } from './QuickStart'
 
 export const router = createBrowserRouter([
   {
@@ -15,7 +16,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Index />,
+        element: <Home />,
       },
       {
         path: ':taskId',
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
             element: <TaskSettings />,
           },
         ],
+      },
+      {
+        path: '/quick-start',
+        element: <QuickStart />,
       },
     ],
   },

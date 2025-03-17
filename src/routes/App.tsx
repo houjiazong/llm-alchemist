@@ -1,11 +1,11 @@
-import { ModeToggle } from '@/components/ModeToggle'
+import { ModeToggle } from '@/views/ModeToggle'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
-import { Toaster } from '@/components/ui/toaster'
-import { TaskList } from '@/components/TaskList'
+import { Toaster } from '@/components/ui/sonner'
+import { TaskList } from '@/views/TaskList'
 import { Button } from '@/components/ui/button'
 import { CirclePlus } from 'lucide-react'
-import { AddTaskForm } from '@/components/AddTaskForm'
+import { AddTaskForm } from '@/views/AddTaskForm'
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,8 @@ import {
 import { useState } from 'react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import config from '@/config'
-import { TaskExport } from '@/components/TaskExport'
-import { TaskImport } from '@/components/TaskImport'
+import { TaskExport } from '@/views/TaskExport'
+import { TaskImport } from '@/views/TaskImport'
 
 export const App = () => {
   const [dialogOpen, setDialogOpen] = useState(false)

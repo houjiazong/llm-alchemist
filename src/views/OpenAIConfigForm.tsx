@@ -16,13 +16,19 @@ import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { type OpenAIOptions } from '@/db'
 import { Switch } from '@/components/ui/switch'
-import { useToast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 
 const openAIConfigSchema = z.object({
   baseURL: z.string().min(1, 'Base URL is required'),
   apiKey: z.string().min(1, 'API Key is required'),
   params: z.object({
-    model: z.string().min(1, 'Model is required'),
+    model: z.string().optional(),
     prompt: z.string().optional(),
     max_tokens: z
       .number()
@@ -32,8 +38,8 @@ const openAIConfigSchema = z.object({
       .optional(),
     temperature: z
       .number()
-      .min(0, { message: 'Temperature must be between 0 and 1' })
-      .max(1, { message: 'Temperature must be between 0 and 1' }),
+      .min(0, { message: 'Temperature must be between 0 and 2' })
+      .max(2, { message: 'Temperature must be between 0 and 2' }),
     stream: z.boolean().optional(),
   }),
 })
@@ -48,7 +54,6 @@ export const OpenAIConfigForm = ({
   onSubmit,
   value,
 }: OpenAIConfigFormProps) => {
-  const { toast } = useToast()
   const [submiting, setSubmiting] = useState(false)
   const [showKey, setShowKey] = useState(false)
   const form = useForm<OpenAIConfig>({
@@ -82,8 +87,7 @@ export const OpenAIConfigForm = ({
     setSubmiting(true)
     try {
       await onSubmit?.(data)
-      toast({
-        title: 'Saved successfully',
+      toast('Saved successfully', {
         description: 'Please go to the workbench page to test',
       })
     } finally {
@@ -146,87 +150,100 @@ export const OpenAIConfigForm = ({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="params.model"
-              render={({ field }) => (
-                <FormItem className="grid gap-2 space-y-0">
-                  <FormLabel>Model</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Model" {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="params.temperature"
-              render={({ field }) => (
-                <FormItem className="grid gap-4 space-y-0">
-                  <div className="flex items-center justify-between h-7">
-                    <FormLabel>Temperature</FormLabel>
-                    <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                      {field.value}
-                    </span>
-                  </div>
-                  <FormControl>
-                    <Slider
-                      min={0.1}
-                      max={1}
-                      step={0.1}
-                      value={[field.value]}
-                      onValueChange={(value) => field.onChange(Number(value))}
+            <Accordion type="single" collapsible>
+              <AccordionItem value="advanced" className="border-b-0">
+                <AccordionTrigger className="py-0">
+                  Advanced Settings
+                </AccordionTrigger>
+                <AccordionContent className="py-0 m-1">
+                  <div className="flex-col space-y-4 sm:flex md:order-2 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="params.model"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-2 space-y-0">
+                          <FormLabel>Model</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Model" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="params.max_tokens"
-              render={({ field }) => (
-                <FormItem className="grid gap-4 space-y-0">
-                  <div className="flex items-center justify-between h-7">
-                    <FormLabel>Max Tokens</FormLabel>
-                    <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                      {field.value}
-                    </span>
-                  </div>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      max={8192}
-                      step={1}
-                      value={field.value}
-                      onChange={(e) => {
-                        let value = parseInt(e.target.value, 10)
-                        if (value > 8192) {
-                          value = 8192
-                        }
-                        field.onChange(value || undefined)
-                      }}
+                    <FormField
+                      control={form.control}
+                      name="params.temperature"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-4 space-y-0">
+                          <div className="flex items-center justify-between h-7">
+                            <FormLabel>Temperature</FormLabel>
+                            <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                              {field.value}
+                            </span>
+                          </div>
+                          <FormControl>
+                            <Slider
+                              min={0.1}
+                              max={2}
+                              step={0.1}
+                              value={[field.value]}
+                              onValueChange={(value) =>
+                                field.onChange(Number(value))
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="params.stream"
-              render={({ field }) => (
-                <FormItem className="grid gap-4 space-y-0">
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Stream</FormLabel>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={(value) => {
-                        field.onChange(value)
-                      }}
+                    <FormField
+                      control={form.control}
+                      name="params.max_tokens"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-4 space-y-0">
+                          <div className="flex items-center justify-between h-7">
+                            <FormLabel>Max Tokens</FormLabel>
+                            <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                              {field.value}
+                            </span>
+                          </div>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              max={8192}
+                              step={1}
+                              value={field.value}
+                              onChange={(e) => {
+                                let value = parseInt(e.target.value, 10)
+                                if (value > 8192) {
+                                  value = 8192
+                                }
+                                field.onChange(value || undefined)
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="params.stream"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-4 space-y-0">
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Stream</FormLabel>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(value) => {
+                                field.onChange(value)
+                              }}
+                            />
+                          </div>
+                        </FormItem>
+                      )}
                     />
                   </div>
-                </FormItem>
-              )}
-            />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <div>
               <Button type="submit" disabled={submiting} className="w-full">
                 {submiting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

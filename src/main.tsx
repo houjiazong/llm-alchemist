@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import dayjs from 'dayjs'
-import { router } from './router'
+import { router } from './routes'
 
 dayjs.extend(relativeTime)
 

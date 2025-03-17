@@ -1,9 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
-import {
-  OpenAIConfigForm,
-  type OpenAIConfig,
-} from '@/components/OpenAIConfigForm'
+import { OpenAIConfigForm, type OpenAIConfig } from '@/views/OpenAIConfigForm'
 import { useParams } from 'react-router-dom'
 import { getTaskIdFromRouteParams } from '@/lib/utils'
 export const TaskSettings = () => {

@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { db } from '@/db'
-import { AddTaskForm } from '@/components/AddTaskForm'
+import { AddTaskForm } from '@/views/AddTaskForm'
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 
-export const Index = () => {
+export const Home = () => {
   const tasks = useLiveQuery(() =>
     db.tasks.orderBy('created_at').reverse().toArray()
   )

@@ -7,7 +7,7 @@ import {
   ColumnDef,
   flexRender,
 } from '@tanstack/react-table'
-import { Checkbox } from '../ui/checkbox'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -15,8 +15,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table'
-import { TextareaAutosize } from '../ui/textarea-autosize'
+} from '@/components/ui/table'
+import { TextareaAutosize } from '@/components/ui/textarea-autosize'
 import { ReactNode, useMemo } from 'react'
 import { CircleX, Clock, ClockArrowDown, Loader } from 'lucide-react'
 import Markdown from 'react-markdown'
@@ -26,8 +26,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select'
-import { Button } from '../ui/button'
+} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface QAListProps {
@@ -40,6 +40,7 @@ interface QAListProps {
   onQuestionRemove: (index: number) => void
   onRateChange: (index: number, rate: number) => void
   onSelectChange: (id: string) => void
+  onRun: (id: string) => void
 }
 
 export const QAList = ({
@@ -52,6 +53,7 @@ export const QAList = ({
   onQuestionRemove,
   onRateChange,
   onSelectChange,
+  // onRun,
 }: QAListProps) => {
   const columns = useMemo(() => {
     const result: ColumnDef<QA>[] = [
@@ -85,10 +87,10 @@ export const QAList = ({
         size: 300,
         cell: (info) => (
           <TextareaAutosize
-            value={info.row.original.question}
+            defaultValue={info.row.original.question}
             onChange={(e) => onQuestionChange(info.row.index, e.target.value)}
             disabled={disabled}
-            className="shadow-none border border-transparent text-sm px-2 py-0.5 text-muted-foreground hover:border-border resize-none"
+            className="shadow-none border border-transparent text-sm px-2 py-1 text-muted-foreground hover:border-border resize-none"
           />
         ),
       },
@@ -115,7 +117,7 @@ export const QAList = ({
                 }
                 disabled={disabled}
               >
-                <SelectTrigger className="w-full h-6">
+                <SelectTrigger className="w-full h-[30px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,27 +134,39 @@ export const QAList = ({
       },
       {
         header: ' ',
-        accessorKey: '_del',
-        id: '_del',
-        size: 30,
-        minSize: 30,
+        accessorKey: '_actions',
+        id: '_actions',
+        size: 90,
+        minSize: 90,
         enableResizing: false,
         cell: (info) => {
           return (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                'hidden h-6 w-6 absolute -mt-3 -ml-3 top-1/2 left-1/2',
-                {
-                  'group-hover:block':
+            <div className="flex gap-2">
+              {/* <Button
+                variant="ghost"
+                size="icon"
+                className={cn('hidden w-7 h-7', {
+                  'group-hover:inline-flex':
                     !!info.row.original.question && !disabled,
-                }
-              )}
-              onClick={() => onQuestionRemove(info.row.index)}
-            >
-              <CircleX className="w-4 h-4" />
-            </Button>
+                })}
+                onClick={() => {
+                  onRun(info.row.original.id)
+                }}
+              >
+                <RedoIcon />
+              </Button> */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn('hidden w-7 h-7', {
+                  'group-hover:inline-flex':
+                    !!info.row.original.question && !disabled,
+                })}
+                onClick={() => onQuestionRemove(info.row.index)}
+              >
+                <CircleX />
+              </Button>
+            </div>
           )
         },
       },
@@ -164,6 +178,7 @@ export const QAList = ({
     onSelectChange,
     onQuestionChange,
     onRateChange,
+    // onRun,
     onQuestionRemove,
   ])
 

@@ -1,13 +1,16 @@
 import { FileDownIcon } from 'lucide-react'
-import { Button } from './ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip'
-import { useToast } from './ui/use-toast'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import saveAs from 'file-saver'
+import { toast } from 'sonner'
 
 export function TaskExport({ taskId }: { taskId?: string }) {
-  const { toast } = useToast()
   const currentTask = useLiveQuery(
     () => db.tasks.where({ id: taskId || '' }).first(),
     [taskId]
@@ -15,10 +18,7 @@ export function TaskExport({ taskId }: { taskId?: string }) {
 
   const handleExport = async () => {
     if (!currentTask) {
-      return toast({
-        variant: 'destructive',
-        description: 'No task selected!',
-      })
+      return toast.warning('No task selected!')
     }
     const transformedTask = {
       name: currentTask.name ?? '',
