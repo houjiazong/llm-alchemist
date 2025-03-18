@@ -1,4 +1,4 @@
-import { FileInput, FileOutput, Loader, Play } from 'lucide-react'
+import { FileDownIcon, FileInput, Loader, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useWorkbench } from '@/hooks/useWorkbench'
 import { QAList } from '@/views/QAList'
@@ -148,7 +148,7 @@ export const TaskWorkbench = () => {
               {exporting ? (
                 <Loader className="animate-spin w-4 h-4 mr-2" />
               ) : (
-                <FileOutput className="h-4 w-4 mr-2" />
+                <FileDownIcon className="h-4 w-4 mr-2" />
               )}
               {selectIds.length > 0 ? 'Export Selected' : 'Export All'}
             </Button>

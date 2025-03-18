@@ -20,6 +20,7 @@ interface OpenAIOptions {
 interface Task {
   id: number | string
   name: string
+  category?: string
   desc?: string
   created_at: number
   openAIOptions?: OpenAIOptions
