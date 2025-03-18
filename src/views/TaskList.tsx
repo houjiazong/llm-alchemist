@@ -1,7 +1,7 @@
 import { db } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CircleX, Loader } from 'lucide-react'
-import dayjs from 'dayjs'
+import { formatDistanceToNow } from 'date-fns'
 import {
   Card,
   CardDescription,
@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from 'react-router-dom'
 import { type MouseEvent } from 'react'
+import { Badge } from '@/components/ui/badge'
 
 export const TaskList = () => {
   const tasks = useLiveQuery(() =>
@@ -66,18 +67,25 @@ export const TaskList = () => {
               )}
               onClick={() => onCardClick(task.id)}
             >
-              <CardHeader className="p-2">
-                <CardTitle className="text-md flex items-center space-x-2">
-                  <span className="flex-1 truncate w-0">{task.name}</span>
-                  <span className="text-gray-400 text-xs font-normal flex-shrink-0 flex-grow-0">
-                    {dayjs(task.created_at).fromNow()}
-                  </span>
+              <CardHeader className="p-3 space-y-2">
+                <CardTitle className="flex items-center">
+                  <div className="flex-1 w-0 truncate">{task.name}</div>
                 </CardTitle>
-                {task.desc && (
-                  <CardDescription className="break-all">
-                    {task.desc}
-                  </CardDescription>
-                )}
+                <CardDescription className="flex flex-col gap-2">
+                  {task.desc && <div>{task.desc}</div>}
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1 truncate w-0 text-gray-400 text-xs">
+                      {formatDistanceToNow(task.created_at, {
+                        addSuffix: true,
+                      })}
+                    </div>
+                    {task.category && (
+                      <Badge className="flex-shrink-0 flex-grow-0">
+                        {task.category}
+                      </Badge>
+                    )}
+                  </div>
+                </CardDescription>
               </CardHeader>
               <CircleX
                 className="absolute -right-1 -top-1 rounded-full opacity-0 translate-x-1 ml-2 h-4 w-4 text-primary bg-primary-foreground hover:text-primary-foreground hover:bg-primary group-hover:opacity-100 group-hover:translate-x-0 transition-[opacity,transform]"

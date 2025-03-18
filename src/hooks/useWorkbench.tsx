@@ -181,7 +181,6 @@ export const useWorkbench = () => {
 
   const onRun = useCallback(
     async (id?: string) => {
-      console.log(id, '=-=---------------------')
       if (!task?.openAIOptions?.baseURL || !task?.openAIOptions?.apiKey) {
         return toast('Check the settings', {
           description:
@@ -226,6 +225,7 @@ export const useWorkbench = () => {
         }))
 
         abortControllerRef.current = new AbortController()
+        console.log(abortControllerRef)
         try {
           const { prompt, temperature, stream, model, max_tokens } =
             task.openAIOptions.params

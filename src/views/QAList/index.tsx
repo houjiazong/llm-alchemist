@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table'
 import { TextareaAutosize } from '@/components/ui/textarea-autosize'
 import { ReactNode, useMemo } from 'react'
-import { CircleX, Clock, ClockArrowDown, Loader } from 'lucide-react'
+import { CircleX, Clock, ClockArrowDown, Loader, PlayIcon } from 'lucide-react'
 import Markdown from 'react-markdown'
 import {
   Select,
@@ -53,7 +53,7 @@ export const QAList = ({
   onQuestionRemove,
   onRateChange,
   onSelectChange,
-  // onRun,
+  onRun,
 }: QAListProps) => {
   const columns = useMemo(() => {
     const result: ColumnDef<QA>[] = [
@@ -85,14 +85,7 @@ export const QAList = ({
         accessorKey: 'question',
         id: 'question',
         size: 300,
-        cell: (info) => (
-          <TextareaAutosize
-            defaultValue={info.row.original.question}
-            onChange={(e) => onQuestionChange(info.row.index, e.target.value)}
-            disabled={disabled}
-            className="shadow-none border border-transparent text-sm px-2 py-1 text-muted-foreground hover:border-border resize-none"
-          />
-        ),
+        cell: () => null,
       },
       {
         header: 'Answer',
@@ -139,48 +132,10 @@ export const QAList = ({
         size: 90,
         minSize: 90,
         enableResizing: false,
-        cell: (info) => {
-          return (
-            <div className="flex gap-2">
-              {/* <Button
-                variant="ghost"
-                size="icon"
-                className={cn('hidden w-7 h-7', {
-                  'group-hover:inline-flex':
-                    !!info.row.original.question && !disabled,
-                })}
-                onClick={() => {
-                  onRun(info.row.original.id)
-                }}
-              >
-                <RedoIcon />
-              </Button> */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn('hidden w-7 h-7', {
-                  'group-hover:inline-flex':
-                    !!info.row.original.question && !disabled,
-                })}
-                onClick={() => onQuestionRemove(info.row.index)}
-              >
-                <CircleX />
-              </Button>
-            </div>
-          )
-        },
       },
     ]
     return result
-  }, [
-    disabled,
-    selectIds,
-    onSelectChange,
-    onQuestionChange,
-    onRateChange,
-    // onRun,
-    onQuestionRemove,
-  ])
+  }, [disabled, selectIds, onSelectChange, onRateChange])
 
   const table = useReactTable({
     data: qas,
@@ -298,6 +253,44 @@ export const QAList = ({
                   {cell.column.id === 'answer'
                     ? renderAnswer(cell.row.original)
                     : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  {cell.column.id === 'question' && (
+                    <TextareaAutosize
+                      defaultValue={cell.row.original.question}
+                      onChange={(e) =>
+                        onQuestionChange(cell.row.index, e.target.value)
+                      }
+                      disabled={disabled}
+                      className="shadow-none border border-transparent text-sm px-2 py-1 text-muted-foreground hover:border-border resize-none"
+                    />
+                  )}
+                  {cell.column.id === '_actions' && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn('hidden w-7 h-7', {
+                          'group-hover:inline-flex':
+                            !!cell.row.original.question && !disabled,
+                        })}
+                        onClick={() => {
+                          onRun(cell.row.original.id)
+                        }}
+                      >
+                        <PlayIcon />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn('hidden w-7 h-7', {
+                          'group-hover:inline-flex':
+                            !!cell.row.original.question && !disabled,
+                        })}
+                        onClick={() => onQuestionRemove(cell.row.index)}
+                      >
+                        <CircleX />
+                      </Button>
+                    </div>
+                  )}
                 </TableCell>
               ))}
             </TableRow>

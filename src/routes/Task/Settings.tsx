@@ -16,7 +16,11 @@ export const TaskSettings = () => {
   }
   return (
     <div className="container">
-      <OpenAIConfigForm value={savedOpenAIOptions} onSubmit={handleSubmit} />
+      <OpenAIConfigForm
+        category={task?.category}
+        value={savedOpenAIOptions}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }

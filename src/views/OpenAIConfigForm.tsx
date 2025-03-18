@@ -49,10 +49,12 @@ export type OpenAIConfig = z.infer<typeof openAIConfigSchema>
 interface OpenAIConfigFormProps {
   onSubmit?: (data: OpenAIConfig) => void
   value?: OpenAIOptions
+  category?: string
 }
 export const OpenAIConfigForm = ({
   onSubmit,
   value,
+  category,
 }: OpenAIConfigFormProps) => {
   const [submiting, setSubmiting] = useState(false)
   const [showKey, setShowKey] = useState(false)
@@ -66,7 +68,7 @@ export const OpenAIConfigForm = ({
         prompt: value?.params?.prompt ?? '',
         max_tokens: value?.params?.max_tokens,
         temperature: value?.params?.temperature ?? 0.7,
-        stream: value?.params?.stream ?? false,
+        stream: value?.params?.stream ?? true,
       },
     },
   })
@@ -79,7 +81,7 @@ export const OpenAIConfigForm = ({
         prompt: value?.params?.prompt ?? '',
         max_tokens: value?.params?.max_tokens,
         temperature: value?.params?.temperature ?? 0.7,
-        stream: value?.params?.stream ?? false,
+        stream: value?.params?.stream ?? true,
       },
     })
   }, [form, value])
@@ -96,7 +98,11 @@ export const OpenAIConfigForm = ({
   }
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(_onSubmit)} autoComplete="off">
+      <form
+        onSubmit={form.handleSubmit(_onSubmit)}
+        autoComplete="off"
+        className="mt-1"
+      >
         <div className="grid items-stretch gap-6 md:grid-cols-[1fr_240px]">
           <div className="flex-col space-y-4 sm:flex md:order-2">
             <FormField
@@ -106,7 +112,11 @@ export const OpenAIConfigForm = ({
                 <FormItem className="grid gap-2 space-y-0">
                   <FormLabel>Base URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="Base URL" {...field} />
+                    <Input
+                      placeholder="Base URL"
+                      {...field}
+                      disabled={!!category}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -120,6 +130,7 @@ export const OpenAIConfigForm = ({
                   <FormControl>
                     <div className="flex items-center space-x-2">
                       <Input
+                        disabled={!!category}
                         placeholder="API Key"
                         {...field}
                         style={
