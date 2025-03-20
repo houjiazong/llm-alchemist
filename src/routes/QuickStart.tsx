@@ -45,6 +45,7 @@ export const QuickStart = () => {
           desc: existingTask?.desc ?? description,
           category,
           created_at: existingTask?.created_at ?? Date.now(),
+          qas: existingTask?.qas ?? [],
           openAIOptions: {
             baseURL: existingTask?.openAIOptions?.baseURL ?? baseURL,
             apiKey: existingTask?.openAIOptions?.apiKey ?? token,
