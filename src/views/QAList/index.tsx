@@ -255,7 +255,7 @@ export const QAList = ({
                     : flexRender(cell.column.columnDef.cell, cell.getContext())}
                   {cell.column.id === 'question' && (
                     <TextareaAutosize
-                      defaultValue={cell.row.original.question}
+                      value={cell.row.original.question}
                       onChange={(e) =>
                         onQuestionChange(cell.row.index, e.target.value)
                       }
