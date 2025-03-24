@@ -2,7 +2,10 @@
 <img src="https://raw.githubusercontent.com/houjiazong/llm-alchemist/main/public/logo.svg" width="150" />
 </div>
 
-[中文 README](README.zh.md)
+<div align="center"><a href="https://github.com/houjiazong/llm-alchemist/blob/main/README.zh.md">中文 README</a></div>
+
+<div align="center"><img width="1272" alt="image" src="https://github.com/user-attachments/assets/12c91c81-770e-4352-a757-af41f93bc988" />
+</div>
 
 # LLM Alchemist
 
