@@ -23,6 +23,7 @@ export function TaskExport({ taskId }: { taskId?: string }) {
     const transformedTask = {
       name: currentTask.name ?? '',
       desc: currentTask.desc ?? '',
+      category: currentTask.category ?? '',
       workbench: (currentTask.qas || []).map((item) => {
         return {
           question: item.question,
@@ -48,11 +49,8 @@ export function TaskExport({ taskId }: { taskId?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger>
-        <Button variant="outline" size="icon">
-          <FileDownIcon
-            className="h-[1.2rem] w-[1.2rem]"
-            onClick={handleExport}
-          />
+        <Button variant="outline" size="icon" onClick={handleExport}>
+          <FileDownIcon className="h-[1.2rem] w-[1.2rem]" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="top">

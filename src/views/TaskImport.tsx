@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'sonner'
 
 interface TaskImportData {
+  category: string
   name: string
   desc: string
   settings: OpenAIOptions
@@ -39,6 +40,7 @@ export function TaskImport({ onSuccess }: TaskImportProps) {
           created_at: Date.now(),
           desc: data.desc ?? '',
           name: data.name ?? '',
+          category: data.category ?? '',
           openAIOptions: data?.settings,
           qas: (data?.workbench || []).map((item) => ({
             id: uuidv4(),
