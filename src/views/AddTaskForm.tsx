@@ -48,6 +48,15 @@ export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
     try {
       const id = await db.tasks.add({
         ...data,
+        openAIOptions: {
+          baseURL: 'https://api.vivgrid.com/v1',
+          apiKey: '',
+          params: {
+            max_tokens: 2048,
+            stream: true,
+            temperature: 0.7,
+          },
+        },
         id: uuidv4(),
         created_at: Date.now(),
       })

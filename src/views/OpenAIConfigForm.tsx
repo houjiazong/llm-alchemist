@@ -8,10 +8,9 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { type OpenAIOptions } from '@/db'
@@ -23,13 +22,25 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+
+const BASE_URL_SUGGESTIONS = [
+  'https://api.vivgrid.com/v1',
+  'https://api.openai.com/v1',
+  'http://localhost:9000/v1',
+]
 
 const openAIConfigSchema = z.object({
   baseURL: z.string().min(1, 'Base URL is required'),
   apiKey: z.string().min(1, 'API Key is required'),
   params: z.object({
     model: z.string().optional(),
-    prompt: z.string().optional(),
     max_tokens: z
       .number()
       .int()
@@ -58,6 +69,8 @@ export const OpenAIConfigForm = ({
 }: OpenAIConfigFormProps) => {
   const [submiting, setSubmiting] = useState(false)
   const [showKey, setShowKey] = useState(false)
+  const [baseURLInputFocused, setBaseURLInputFocused] = useState(false)
+  const [commandSelected, setCommandSelected] = useState<string>('')
   const form = useForm<OpenAIConfig>({
     resolver: zodResolver(openAIConfigSchema),
     defaultValues: {
@@ -65,20 +78,20 @@ export const OpenAIConfigForm = ({
       apiKey: value?.apiKey ?? '',
       params: {
         model: value?.params?.model ?? '',
-        prompt: value?.params?.prompt ?? '',
         max_tokens: value?.params?.max_tokens,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? true,
       },
     },
   })
+  const inputBaseURL = form.watch('baseURL')
+  const inputMaxTokens = form.watch('params.max_tokens')
   useEffect(() => {
     form.reset({
       baseURL: value?.baseURL ?? '',
       apiKey: value?.apiKey ?? '',
       params: {
         model: value?.params?.model ?? '',
-        prompt: value?.params?.prompt ?? '',
         max_tokens: value?.params?.max_tokens,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? true,
@@ -96,6 +109,39 @@ export const OpenAIConfigForm = ({
       setSubmiting(false)
     }
   }
+
+  const filteredBaseURLSuggestions = useMemo(() => {
+    return BASE_URL_SUGGESTIONS.filter(
+      (str) => str.includes(inputBaseURL) && str !== inputBaseURL
+    )
+  }, [inputBaseURL])
+  const baseURLSuggestionsOpened = useMemo(() => {
+    return baseURLInputFocused && filteredBaseURLSuggestions.length > 0
+  }, [baseURLInputFocused, filteredBaseURLSuggestions])
+
+  const prev = (e: React.KeyboardEvent) => {
+    e.preventDefault()
+    const index = filteredBaseURLSuggestions.findIndex(
+      (item) => item === commandSelected
+    )
+    let newSelected = filteredBaseURLSuggestions[index - 1]
+    if (!newSelected) {
+      newSelected =
+        filteredBaseURLSuggestions[filteredBaseURLSuggestions.length - 1]
+    }
+    setCommandSelected(newSelected)
+  }
+  const next = (e: React.KeyboardEvent) => {
+    e.preventDefault()
+    const index = filteredBaseURLSuggestions.findIndex(
+      (item) => item === commandSelected
+    )
+    let newSelected = filteredBaseURLSuggestions[index + 1]
+    if (!newSelected) {
+      newSelected = filteredBaseURLSuggestions[0]
+    }
+    setCommandSelected(newSelected)
+  }
   return (
     <Form {...form}>
       <form
@@ -103,185 +149,226 @@ export const OpenAIConfigForm = ({
         autoComplete="off"
         className="mt-1"
       >
-        <div className="grid items-stretch gap-6 md:grid-cols-[1fr_240px]">
-          <div className="flex-col space-y-4 sm:flex md:order-2">
-            <FormField
-              control={form.control}
-              name="baseURL"
-              render={({ field }) => (
-                <FormItem className="grid gap-2 space-y-0">
-                  <FormLabel>Base URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Base URL"
-                      {...field}
-                      disabled={!!category}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="apiKey"
-              render={({ field }) => (
-                <FormItem className="grid gap-2 space-y-0">
-                  <FormLabel>API Key</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center space-x-2">
+        <div className="flex-col space-y-4 flex max-w-xl mx-auto">
+          <FormField
+            control={form.control}
+            name="baseURL"
+            render={({ field }) => (
+              <FormItem className="grid gap-2 space-y-0">
+                <FormLabel>Base URL</FormLabel>
+                <FormControl>
+                  <Popover open={baseURLSuggestionsOpened}>
+                    <PopoverAnchor>
                       <Input
+                        placeholder="Base URL"
+                        {...field}
                         disabled={!!category}
-                        placeholder="API Key"
-                        {...field}
-                        style={
-                          showKey
-                            ? {}
-                            : {
-                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                // @ts-ignore
-                                WebkitTextSecurity: 'disc',
-                                textSecurity: 'disc',
+                        onFocus={() => setBaseURLInputFocused(true)}
+                        onBlur={() => setBaseURLInputFocused(false)}
+                        onKeyDown={(e) => {
+                          const isComposing =
+                            e.nativeEvent.isComposing || e.keyCode === 229
+                          if (e.defaultPrevented || isComposing) {
+                            return
+                          }
+                          switch (e.key) {
+                            case 'ArrowDown': {
+                              if (baseURLSuggestionsOpened) {
+                                next(e)
                               }
-                        }
+                              break
+                            }
+                            case 'ArrowUp': {
+                              if (baseURLSuggestionsOpened) {
+                                prev(e)
+                              }
+                              break
+                            }
+                            case 'Enter': {
+                              if (baseURLSuggestionsOpened) {
+                                e.preventDefault()
+                                form.setValue('baseURL', commandSelected)
+                              }
+                            }
+                          }
+                        }}
                       />
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        type="button"
-                        onClick={() => setShowKey(!showKey)}
-                      >
-                        {!showKey ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <Accordion type="single" collapsible>
-              <AccordionItem value="advanced" className="border-b-0">
-                <AccordionTrigger className="py-0">
-                  Advanced Settings
-                </AccordionTrigger>
-                <AccordionContent className="py-0 m-1">
-                  <div className="flex-col space-y-4 sm:flex md:order-2 pt-4">
-                    <FormField
-                      control={form.control}
-                      name="params.model"
-                      render={({ field }) => (
-                        <FormItem className="grid gap-2 space-y-0">
-                          <FormLabel>Model</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Model" {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
+                    </PopoverAnchor>
+
+                    <PopoverContent
+                      onOpenAutoFocus={(e) => e.preventDefault()}
+                      className="w-[--radix-popover-trigger-width] p-0"
+                    >
+                      <Command value={commandSelected}>
+                        <CommandList>
+                          <CommandGroup heading="Suggestions">
+                            {filteredBaseURLSuggestions.map((str) => {
+                              return (
+                                <CommandItem
+                                  key={str}
+                                  onSelect={(val) =>
+                                    form.setValue('baseURL', val)
+                                  }
+                                >
+                                  {str}
+                                </CommandItem>
+                              )
+                            })}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="apiKey"
+            render={({ field }) => (
+              <FormItem className="grid gap-2 space-y-0">
+                <FormLabel>API Key</FormLabel>
+                <FormControl>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      disabled={!!category}
+                      placeholder="API Key"
+                      {...field}
+                      style={
+                        showKey
+                          ? {}
+                          : {
+                              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                              // @ts-ignore
+                              WebkitTextSecurity: 'disc',
+                              textSecurity: 'disc',
+                            }
+                      }
                     />
-                    <FormField
-                      control={form.control}
-                      name="params.temperature"
-                      render={({ field }) => (
-                        <FormItem className="grid gap-4 space-y-0">
-                          <div className="flex items-center justify-between h-7">
-                            <FormLabel>Temperature</FormLabel>
-                            <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                              {field.value}
-                            </span>
-                          </div>
-                          <FormControl>
-                            <Slider
-                              min={0.1}
-                              max={2}
-                              step={0.1}
-                              value={[field.value]}
-                              onValueChange={(value) =>
-                                field.onChange(Number(value))
-                              }
-                            />
-                          </FormControl>
-                        </FormItem>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      type="button"
+                      onClick={() => setShowKey(!showKey)}
+                    >
+                      {!showKey ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
                       )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="params.max_tokens"
-                      render={({ field }) => (
-                        <FormItem className="grid gap-4 space-y-0">
-                          <div className="flex items-center justify-between h-7">
-                            <FormLabel>Max Tokens</FormLabel>
-                            <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                              {field.value}
-                            </span>
-                          </div>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              max={8192}
-                              step={1}
-                              value={field.value}
-                              onChange={(e) => {
-                                let value = parseInt(e.target.value, 10)
-                                if (value > 8192) {
-                                  value = 8192
-                                }
-                                field.onChange(value || undefined)
-                              }}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="params.stream"
-                      render={({ field }) => (
-                        <FormItem className="grid gap-4 space-y-0">
-                          <div className="flex items-center justify-between">
-                            <FormLabel>Stream</FormLabel>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={(value) => {
-                                field.onChange(value)
-                              }}
-                            />
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+                    </Button>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            <div>
-              <Button type="submit" disabled={submiting} className="w-full">
-                {submiting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save
-              </Button>
-            </div>
-          </div>
-          <div className="md:order-1">
-            <div className="flex flex-col space-y-4">
-              <FormField
-                control={form.control}
-                name="params.prompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        // className="min-h-[400px] flex-1 p-4 md:min-h-[500px] lg:min-h-[600px]"
-                        className="h-[420px]"
-                        placeholder="Write your prompt here"
-                        rows={10}
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <Accordion type="single" collapsible>
+            <AccordionItem value="advanced" className="border-b-0">
+              <AccordionTrigger className="py-0">
+                Advanced Settings
+              </AccordionTrigger>
+              <AccordionContent className="py-0 m-1">
+                <div className="flex-col space-y-4 sm:flex md:order-2 pt-4">
+                  <FormField
+                    control={form.control}
+                    name="params.model"
+                    render={({ field }) => (
+                      <FormItem className="grid gap-2 space-y-0">
+                        <FormLabel>Model</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Model" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="params.temperature"
+                    render={({ field }) => (
+                      <FormItem className="grid gap-4 space-y-0">
+                        <div className="flex items-center justify-between h-7">
+                          <FormLabel>Temperature</FormLabel>
+                          <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                            {field.value}
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Slider
+                            min={0.1}
+                            max={2}
+                            step={0.1}
+                            value={[field.value]}
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="params.max_tokens"
+                    render={({ field }) => (
+                      <FormItem className="grid gap-4 space-y-0">
+                        <div className="flex items-center justify-between h-7">
+                          <FormLabel>Max Tokens</FormLabel>
+                          <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                            {inputMaxTokens}
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            max={8192}
+                            step={1024}
+                            value={inputMaxTokens ?? ''}
+                            onChange={(e) => {
+                              const inputValue = e.target.value
+                              if (inputValue === '') {
+                                console.log(inputValue)
+                                field.onChange(undefined)
+                                return
+                              }
+
+                              let parsed = parseInt(inputValue, 10)
+                              if (!isNaN(parsed)) {
+                                if (parsed > 8192) parsed = 8192
+                                field.onChange(parsed)
+                              }
+                            }}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="params.stream"
+                    render={({ field }) => (
+                      <FormItem className="grid gap-4 space-y-0">
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Stream</FormLabel>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(value) => {
+                              field.onChange(value)
+                            }}
+                          />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          <div>
+            <Button type="submit" disabled={submiting} className="w-full">
+              {submiting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
           </div>
         </div>
       </form>

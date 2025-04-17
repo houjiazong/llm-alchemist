@@ -35,7 +35,6 @@ export function TaskExport({ taskId }: { taskId?: string }) {
         params: {
           max_tokens: currentTask.openAIOptions?.params?.max_tokens ?? '',
           model: currentTask.openAIOptions?.params?.model ?? '',
-          prompt: currentTask.openAIOptions?.params?.prompt ?? '',
           stream: currentTask.openAIOptions?.params?.stream ?? true,
           temperature: currentTask.openAIOptions?.params?.temperature ?? '',
         },

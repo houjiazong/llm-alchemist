@@ -11,7 +11,6 @@ interface OpenAIOptions {
   apiKey: string
   params: {
     model?: string
-    prompt?: string
     max_tokens?: number
     temperature?: number
     stream?: boolean
