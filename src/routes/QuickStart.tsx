@@ -51,8 +51,8 @@ export const QuickStart = () => {
             apiKey: existingTask?.openAIOptions?.apiKey ?? token,
             params: {
               model: existingTask?.openAIOptions?.params?.model ?? '',
-              prompt: existingTask?.openAIOptions?.params?.prompt ?? '',
-              max_tokens: existingTask?.openAIOptions?.params?.max_tokens,
+              max_tokens:
+                existingTask?.openAIOptions?.params?.max_tokens ?? 2048,
               temperature:
                 existingTask?.openAIOptions?.params?.temperature ?? 0.7,
               stream: existingTask?.openAIOptions?.params?.stream ?? true,

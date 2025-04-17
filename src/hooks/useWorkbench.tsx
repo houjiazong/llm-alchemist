@@ -227,18 +227,12 @@ export const useWorkbench = () => {
         abortControllerRef.current = new AbortController()
         console.log(abortControllerRef)
         try {
-          const { prompt, temperature, stream, model, max_tokens } =
+          const { temperature, stream, model, max_tokens } =
             task.openAIOptions.params
           let answer = ''
           const messages: ChatCompletionMessageParam[] = [
             { role: 'user', content: updatedQas[i].question },
           ]
-          if (prompt) {
-            messages.unshift({
-              role: 'assistant',
-              content: prompt,
-            })
-          }
           const body = {
             messages,
             temperature,
@@ -247,7 +241,7 @@ export const useWorkbench = () => {
             messages: ChatCompletionMessageParam[]
             model: string
             stream: boolean
-            max_tokens: number
+            max_completion_tokens: number
             temperature: number
           }
           if (model) {
@@ -258,7 +252,7 @@ export const useWorkbench = () => {
             typeof max_tokens !== 'undefined' &&
             !isNaN(max_tokens)
           ) {
-            body.max_tokens = max_tokens
+            body.max_completion_tokens = max_tokens
           }
           const response = await client.chat.completions.create(body, {
             signal: abortControllerRef.current.signal,
