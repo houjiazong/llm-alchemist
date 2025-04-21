@@ -86,6 +86,9 @@ importers:
       dexie-react-hooks:
         specifier: ^1.1.7
         version: 1.1.7(@types/react@18.3.3)(dexie@4.0.8)(react@18.3.1)
+      es-toolkit:
+        specifier: ^1.35.0
+        version: 1.35.0
       file-saver:
         specifier: ^2.0.5
         version: 2.0.5
@@ -2276,6 +2279,9 @@ packages:
   environment@1.1.0:
     resolution: {integrity: sha512-xUtoPkMggbz0MPyPiIWr1Kp4aeWJjDZ6SMvURhimjdZgsRuDplF5/s9hcgGhyXMhs+6vpnuoiZ2kFiu3FMnS8Q==}
     engines: {node: '>=18'}
+
+  es-toolkit@1.35.0:
+    resolution: {integrity: sha512-kVHyrRoC0eLc1hWJ6npG8nNFtOG+nWfcMI+XE0RaFO0gxd6Ions8r0O/U64QyZgY7IeidUnS5oZlRZYUgMGCAg==}
 
   esbuild@0.21.5:
     resolution: {integrity: sha512-mg3OPMV4hXywwpoDxu3Qda5xCKQi+vCTZq8S9J/EpkhB2HzKXq4SNFZE3+NK93JYxc8VMSep+lOUSC/RVKaBqw==}
@@ -5607,6 +5613,8 @@ snapshots:
   entities@2.2.0: {}
 
   environment@1.1.0: {}
+
+  es-toolkit@1.35.0: {}
 
   esbuild@0.21.5:
     optionalDependencies:

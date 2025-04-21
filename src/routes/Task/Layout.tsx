@@ -62,7 +62,7 @@ export const TaskLayout = () => {
         </NavigationMenu>
       </div>
       <Separator />
-      <div className="flex-1 overflow-x-hidden overflow-y-auto pb-4">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto pb-4 h-0">
         <Outlet />
       </div>
     </div>
