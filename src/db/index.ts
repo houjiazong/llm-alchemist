@@ -1,11 +1,21 @@
 import Dexie, { type EntityTable } from 'dexie'
 
+export interface LLMUsage {
+  prompt_tokens?: number
+  completion_tokens?: number
+  total_tokens?: number
+}
+
 interface QA {
   id: string
   question: string
   answer?: string
   rate?: string | number
+  expectation?: string
+  expectationResult?: string
+  usage?: LLMUsage
 }
+
 interface OpenAIOptions {
   baseURL: string
   apiKey: string
