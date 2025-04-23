@@ -92,9 +92,9 @@ export function WorkbenchItemOutput({
 
   const formatNum = (num: number | null | undefined, suffix?: string) => {
     if (isNil(num)) return '--'
-    let fmt = '0,0.[00]'
-    if (suffix) fmt += suffix
-    return numeral(num).format(fmt)
+    let ret = numeral(num).format('0,0.[00]')
+    if (suffix) ret += suffix
+    return ret
   }
 
   return (
