@@ -1,7 +1,7 @@
 import { db, type QA } from '@/db'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { WorkbenchList } from './List'
-import { cloneDeep, isEmpty, isNil } from 'es-toolkit/compat'
+import { isEmpty, isNil } from 'es-toolkit/compat'
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
@@ -83,6 +83,12 @@ export function Workbench({ taskId }: WorkbenchProps) {
     })
   }
 
+  const updateQA = (id: string, updater: (qa: QA) => QA) => {
+    setQAS((prev) =>
+      prev.map((item) => (item.id === id ? updater(item) : item))
+    )
+  }
+
   if (isNil(task?.id)) return null
 
   const isSelected = selectedIds.length > 0
@@ -135,6 +141,53 @@ export function Workbench({ taskId }: WorkbenchProps) {
     setQAS(updatedItems)
   }
 
+  //   const handleExpectationTest = async (
+  //     qa: QAInfo,
+  //     id: string,
+  //     baseOptions: Record<string, unknown>
+  //   ) => {
+  //     if (!qa.expectation) return
+
+  //     let expectationResult = ''
+  //     let tempQA = {
+  //       ...qa,
+  //       _extraInfo: { ...(qa._extraInfo || {}), loading: true },
+  //     }
+  //     updateQA(id, () => tempQA)
+
+  //     await apiRef.current!.llm.chat({
+  //       ...baseOptions,
+  //       messages: [
+  //         {
+  //           role: 'user',
+  //           content: `
+  // Question:
+  // ${qa.question}
+
+  // LLM Answer:
+  // ${qa.answer}
+
+  // Expected Answer:
+  // ${qa.expectation}
+
+  // Please evaluate the test result based on the following criteria and return whether it passes in JSON format:
+  // - If the LLM answer matches the expected answer, return { "pass": true }
+  // - If the LLM answer does not match the expected answer, return { "pass": false }
+  //           `.trim(),
+  //         },
+  //       ],
+  //       onContent: (content) => {
+  //         expectationResult += content
+  //         tempQA = { ...tempQA, expectationResult }
+  //         updateQA(id, () => tempQA)
+  //       },
+  //       onFinish: () => {
+  //         updateQA(id, () => tempQA)
+  //         updateQASToDB(qas.map((item) => (item.id === id ? tempQA : item)))
+  //       },
+  //     } as ChatOptions)
+  //   }
+
   const handleRun = async (id?: string) => {
     if (isNil(apiRef.current)) return
     const ids = id
@@ -143,23 +196,9 @@ export function Workbench({ taskId }: WorkbenchProps) {
         ? selectedIds
         : qas.map((qa) => qa.id)
 
-    for (let i = 0, len = ids.length; i < len; i++) {
-      const qa = qas.find((qa) => qa.id === ids[i])
-      if (isNil(qa?.question) || isEmpty(qa?.question)) continue
-
-      let newAnswer = ''
-      let newQA = cloneDeep(qa)
-      newQA = {
-        ...newQA,
-        _extraInfo: {
-          ...newQA._extraInfo,
-          loading: true,
-        },
-      }
-
-      setQAS((prev) =>
-        prev.map((item) => (item.id === newQA.id ? newQA : item))
-      )
+    for (const currentId of ids) {
+      const qa = qas.find((item) => item.id === currentId)
+      if (!qa || isEmpty(qa.question)) continue
 
       const baseOptions = {
         baseURL: task.openAIOptions?.baseURL ?? '',
@@ -171,6 +210,14 @@ export function Workbench({ taskId }: WorkbenchProps) {
           stream: task.openAIOptions?.params?.stream ?? true,
         },
       }
+      let newAnswer = ''
+
+      let newQA = {
+        ...qa,
+        _extraInfo: { ...(qa._extraInfo || {}), loading: true },
+      }
+      updateQA(currentId, () => newQA)
+
       const startTime = performance.now()
 
       try {
@@ -186,118 +233,48 @@ export function Workbench({ taskId }: WorkbenchProps) {
             newQA = {
               ...newQA,
               _extraInfo: {
-                ...newQA._extraInfo,
+                ...(newQA._extraInfo || {}),
                 ttft: performance.now() - startTime,
               },
             }
-            setQAS((prev) =>
-              prev.map((item) => (item.id === newQA.id ? newQA : item))
-            )
+            updateQA(currentId, () => newQA)
           },
           onContent: (content) => {
-            newQA = {
-              ...newQA,
-              answer: (newAnswer += content),
-            }
-            setQAS((prev) =>
-              prev.map((item) => (item.id === newQA.id ? newQA : item))
-            )
+            newAnswer += content
+            newQA = { ...newQA, answer: newAnswer }
+            updateQA(currentId, () => newQA)
           },
           onFinish: () => {
             newQA = {
               ...newQA,
               _extraInfo: {
-                ...newQA._extraInfo,
+                ...(newQA._extraInfo || {}),
                 completion: performance.now() - startTime,
               },
             }
-            const newQAS = qas.map((item) =>
-              item.id === newQA.id ? newQA : item
+            updateQA(currentId, () => newQA)
+            updateQASToDB(
+              qas.map((item) => (item.id === newQA.id ? newQA : item))
             )
-            setQAS(newQAS)
-            updateQASToDB(newQAS)
           },
           onUsage: (usage) => {
-            newQA = {
-              ...newQA,
-              usage,
-            }
-            const newQAS = qas.map((item) =>
-              item.id === newQA.id ? newQA : item
+            newQA = { ...newQA, usage }
+            updateQA(currentId, () => newQA)
+            updateQASToDB(
+              qas.map((item) => (item.id === newQA.id ? newQA : item))
             )
-            setQAS(newQAS)
-            updateQASToDB(newQAS)
           },
         } as ChatOptions)
+        // if (newQA.expectation) {
+        //   await handleExpectationTest(newQA, currentId, baseOptions)
+        // }
       } finally {
         newQA = {
           ...newQA,
-          _extraInfo: { ...newQA._extraInfo, loading: false },
+          _extraInfo: { ...(newQA._extraInfo || {}), loading: false },
         }
-        setQAS((prev) =>
-          prev.map((item) => (item.id === newQA.id ? newQA : item))
-        )
+        updateQA(currentId, () => newQA)
       }
-      //       if (!newQA.expectation) continue
-      //       newQA = {
-      //         ...newQA,
-      //         _extraInfo: {
-      //           ...newQA._extraInfo,
-      //           loading: true,
-      //         },
-      //       }
-      //       setQAS((prev) =>
-      //         prev.map((item) => (item.id === newQA.id ? newQA : item))
-      //       )
-      //       let newExpectationResult = ''
-      //       try {
-      //         await apiRef.current.llm.chat({
-      //           ...baseOptions,
-      //           messages: [
-      //             {
-      //               role: 'user',
-      //               content: `
-      // Question:
-      // ${newQA.question}
-
-      // LLM Answer:
-      // ${newQA.answer}
-
-      // Expected Answer:
-      // ${newQA.expectation}
-
-      // Please evaluate the test result based on the following criteria and return whether it passes in JSON format:
-      // - If the LLM answer matches the expected answer, return { "pass": true }
-      // - If the LLM answer does not match the expected answer, return { "pass": false }
-      //             `,
-      //             },
-      //           ],
-      //           onContent: (content) => {
-      //             newQA = {
-      //               ...newQA,
-      //               expectationResult: (newExpectationResult += content),
-      //             }
-      //             setQAS((prev) =>
-      //               prev.map((item) => (item.id === newQA.id ? newQA : item))
-      //             )
-      //           },
-      //           onFinish: () => {
-      //             const newQAS = qas.map((item) =>
-      //               item.id === newQA.id ? newQA : item
-      //             )
-      //             setQAS(newQAS)
-      //             updateQASToDB(newQAS)
-      //           },
-      //         } as ChatOptions)
-      //       } finally {
-      //         newQA = {
-      //           ...newQA,
-      //           _extraInfo: { ...newQA._extraInfo, loading: false },
-      //         }
-      //         setQAS((prev) =>
-      //           prev.map((item) => (item.id === newQA.id ? newQA : item))
-      //         )
-      //       }
     }
   }
 
