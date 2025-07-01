@@ -8,7 +8,7 @@ import { motion } from 'motion/react'
 import { type QAInfo } from '.'
 import { isEmpty, isNil } from 'es-toolkit/compat'
 import numeral from 'numeral'
-import { Markdown } from './Markdown'
+import { Message } from './Message'
 
 interface WorkbenchItemOutputProps {
   item: QAInfo
@@ -32,7 +32,10 @@ export function WorkbenchItemOutput({
           transition={{ duration: 0.2 }}
         >
           {isFormatOutput ? (
-            <Markdown>{item.answer as string}</Markdown>
+            <Message
+              message={item.answer || ''}
+              isStreamFinished={!!item.answer && !item._extraInfo?.loading}
+            />
           ) : (
             <p>{item.answer}</p>
           )}

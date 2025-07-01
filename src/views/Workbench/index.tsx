@@ -1,32 +1,16 @@
-import { db, type QA } from '@/db'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { WorkbenchList } from './List'
-import { isEmpty, isNil } from 'es-toolkit/compat'
-import { type ChangeEvent, useEffect, useRef, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
-import { ChatOptions, ClientApi, getApi, ServiceProvider } from '@/api'
 import { Toggle } from '@/components/ui/toggle'
-import { LetterTextIcon, Loader } from 'lucide-react'
+import { db, QA } from '@/db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { isEmpty, isNil } from 'es-toolkit/compat'
+import { LetterTextIcon, LoaderIcon } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
-
-export interface QAInfo extends QA {
-  _extraInfo?: {
-    loading?: boolean
-    ttft?: number
-    completion?: number
-    functionCall?: {
-      name: string
-      arguments?: Record<string, unknown>
-    }
-    functionCallResult?: {
-      name: string
-      arguments?: Record<string, unknown>
-      result?: Record<string, unknown>
-    }
-  }
-}
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { WorkbenchItem, WorkbenchItemRef } from './Item'
+import OpenAI from 'openai'
 
 interface WorkbenchProps {
   taskId: string
@@ -34,22 +18,30 @@ interface WorkbenchProps {
 
 export function Workbench({ taskId }: WorkbenchProps) {
   const [isFormatOutput, setIsFormatOutput] = useState(true)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const task = useLiveQuery(() => db.tasks.get(taskId), [taskId])
-  const [qas, setQAS] = useState<QAInfo[]>([])
-  const apiRef = useRef<ClientApi | null>()
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-
   const [exporting, setExporting] = useState(false)
   const [importing, setImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const task = useLiveQuery(() => db.tasks.get(taskId), [taskId])
+  const [qas, setQAS] = useState<QA[]>([])
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const itemRefs = useRef<Map<string, WorkbenchItemRef>>(new Map())
+
+  const [loadings, setLoadings] = useState<{ [id: string]: boolean }>({})
+
+  const client = useMemo(() => {
+    if (!task?.openAIOptions?.apiKey || !task?.openAIOptions?.baseURL) {
+      return
+    }
+    return new OpenAI({
+      apiKey: task.openAIOptions.apiKey,
+      baseURL: `${import.meta.env.VITE_PROXY_URL}${task.openAIOptions.baseURL}`,
+      dangerouslyAllowBrowser: true,
+    })
+  }, [task?.openAIOptions?.apiKey, task?.openAIOptions?.baseURL])
 
   useEffect(() => {
-    apiRef.current = getApi(task?.category as ServiceProvider)
     if (isNil(task?.qas) || isEmpty(task?.qas)) return
     setQAS(task.qas)
-    return () => {
-      apiRef.current = null
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id])
 
@@ -69,214 +61,14 @@ export function Workbench({ taskId }: WorkbenchProps) {
     }
   }, [qas])
 
-  const updateQASToDB = (data: QAInfo[]) => {
-    db.tasks.update(taskId, {
-      qas: data
-        .filter((qa) => !isNil(qa.question) && !isEmpty(qa.question))
-        .map((item) => {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { _extraInfo, ...rest } = item
-          return {
-            ...rest,
-          }
-        }),
-    })
-  }
-
-  const updateQA = (id: string, updater: (qa: QA) => QA) => {
-    setQAS((prev) =>
-      prev.map((item) => (item.id === id ? updater(item) : item))
-    )
-  }
-
-  if (isNil(task?.id)) return null
-
-  const isSelected = selectedIds.length > 0
-
-  const handlePromptInputChange = (
-    id: string,
-    e: ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const newValue = e.target.value
-
-    const updatedItems = qas.map((item) =>
-      item.id === id ? { ...item, question: newValue } : item
-    )
-
-    updateQASToDB(updatedItems)
-    setQAS(updatedItems)
-  }
-
-  const handleExpectationChange = (
-    id: string,
-    e: ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const newValue = e.target.value
-
-    const updatedItems = qas.map((item) =>
-      item.id === id ? { ...item, expectation: newValue } : item
-    )
-
-    updateQASToDB(updatedItems)
-    setQAS(updatedItems)
-  }
-
-  const handleRemove = (id: string) => {
-    const updatedItems = qas.filter((item) => item.id !== id)
-    updateQASToDB(updatedItems)
-    setQAS(updatedItems)
-  }
-
-  const handleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    )
-  }
-
-  const handleRateChange = (id: string, rating: number) => {
-    const updatedItems = qas.map((item) =>
-      item.id === id ? { ...item, rate: rating } : item
-    )
-    updateQASToDB(updatedItems)
-    setQAS(updatedItems)
-  }
-
-  //   const handleExpectationTest = async (
-  //     qa: QAInfo,
-  //     id: string,
-  //     baseOptions: Record<string, unknown>
-  //   ) => {
-  //     if (!qa.expectation) return
-
-  //     let expectationResult = ''
-  //     let tempQA = {
-  //       ...qa,
-  //       _extraInfo: { ...(qa._extraInfo || {}), loading: true },
-  //     }
-  //     updateQA(id, () => tempQA)
-
-  //     await apiRef.current!.llm.chat({
-  //       ...baseOptions,
-  //       messages: [
-  //         {
-  //           role: 'user',
-  //           content: `
-  // Question:
-  // ${qa.question}
-
-  // LLM Answer:
-  // ${qa.answer}
-
-  // Expected Answer:
-  // ${qa.expectation}
-
-  // Please evaluate the test result based on the following criteria and return whether it passes in JSON format:
-  // - If the LLM answer matches the expected answer, return { "pass": true }
-  // - If the LLM answer does not match the expected answer, return { "pass": false }
-  //           `.trim(),
-  //         },
-  //       ],
-  //       onContent: (content) => {
-  //         expectationResult += content
-  //         tempQA = { ...tempQA, expectationResult }
-  //         updateQA(id, () => tempQA)
-  //       },
-  //       onFinish: () => {
-  //         updateQA(id, () => tempQA)
-  //         updateQASToDB(qas.map((item) => (item.id === id ? tempQA : item)))
-  //       },
-  //     } as ChatOptions)
-  //   }
-
-  const handleRun = async (id?: string) => {
-    if (isNil(apiRef.current)) return
-    const ids = id
-      ? [id]
-      : selectedIds.length
-        ? selectedIds
-        : qas.map((qa) => qa.id)
-
-    for (const currentId of ids) {
-      const qa = qas.find((item) => item.id === currentId)
-      if (!qa || isEmpty(qa.question)) continue
-
-      const baseOptions = {
-        baseURL: task.openAIOptions?.baseURL ?? '',
-        apiKey: task.openAIOptions?.apiKey ?? '',
-        params: {
-          model: task.openAIOptions?.params?.model ?? '',
-          max_tokens: task.openAIOptions?.params?.max_tokens,
-          temperature: task.openAIOptions?.params?.temperature,
-          stream: task.openAIOptions?.params?.stream ?? true,
-        },
-      }
-      let newAnswer = ''
-
-      let newQA = {
-        ...qa,
-        _extraInfo: { ...(qa._extraInfo || {}), loading: true },
-      }
-      updateQA(currentId, () => newQA)
-
-      const startTime = performance.now()
-
-      try {
-        await apiRef.current.llm.chat({
-          ...baseOptions,
-          messages: [
-            {
-              role: 'user',
-              content: newQA.question,
-            },
-          ],
-          onConnect: () => {
-            newQA = {
-              ...newQA,
-              _extraInfo: {
-                ...(newQA._extraInfo || {}),
-                ttft: performance.now() - startTime,
-              },
-            }
-            updateQA(currentId, () => newQA)
-          },
-          onContent: (content) => {
-            newAnswer += content
-            newQA = { ...newQA, answer: newAnswer }
-            updateQA(currentId, () => newQA)
-          },
-          onFinish: () => {
-            newQA = {
-              ...newQA,
-              _extraInfo: {
-                ...(newQA._extraInfo || {}),
-                completion: performance.now() - startTime,
-              },
-            }
-            updateQA(currentId, () => newQA)
-            updateQASToDB(
-              qas.map((item) => (item.id === newQA.id ? newQA : item))
-            )
-          },
-          onUsage: (usage) => {
-            newQA = { ...newQA, usage }
-            updateQA(currentId, () => newQA)
-            updateQASToDB(
-              qas.map((item) => (item.id === newQA.id ? newQA : item))
-            )
-          },
-        } as ChatOptions)
-        // if (newQA.expectation) {
-        //   await handleExpectationTest(newQA, currentId, baseOptions)
-        // }
-      } finally {
-        newQA = {
-          ...newQA,
-          _extraInfo: { ...(newQA._extraInfo || {}), loading: false },
-        }
-        updateQA(currentId, () => newQA)
-      }
-    }
-  }
+  const updateQASToDB = useCallback(
+    (data: QA[]) => {
+      db.tasks.update(taskId, {
+        qas: data.filter((qa) => !isNil(qa.question) && !isEmpty(qa.question)),
+      })
+    },
+    [taskId]
+  )
 
   const onExport = async () => {
     setExporting(true)
@@ -297,7 +89,7 @@ export function Workbench({ taskId }: WorkbenchProps) {
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, 'QAS')
 
-      XLSX.writeFile(workbook, `${task.name}-workbench-table-data.xlsx`)
+      XLSX.writeFile(workbook, `${task?.name}-workbench-table-data.xlsx`)
     } finally {
       setExporting(false)
     }
@@ -344,6 +136,7 @@ export function Workbench({ taskId }: WorkbenchProps) {
             rate: Number(rate) || 0,
           }
         })
+      if (!task?.id) return
       if (formattedQas.length > 0) {
         await db.tasks.update(task.id, {
           qas: [
@@ -363,13 +156,47 @@ export function Workbench({ taskId }: WorkbenchProps) {
     }
   }
 
+  const handleRun = async () => {
+    const ids = selectedIds.length > 0 ? selectedIds : qas.map((qa) => qa.id)
+    for (let i = 0, len = ids.length; i < len; i++) {
+      await itemRefs.current.get(ids[i])?.run()
+    }
+  }
+
+  const handleRemove = useCallback(
+    (id: string) => {
+      const updatedItems = qas.filter((item) => item.id !== id)
+      updateQASToDB(updatedItems)
+      setQAS(updatedItems)
+    },
+    [qas, updateQASToDB]
+  )
+
+  const handleUpdateItemToDB = useCallback(
+    (id: string, newItem: QA) => {
+      const updatedItems = qas.map((item) =>
+        item.id === id ? { ...item, ...newItem } : item
+      )
+
+      updateQASToDB(updatedItems)
+      setQAS(updatedItems)
+    },
+    [qas, updateQASToDB]
+  )
+
   const onFileSelect = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click()
     }
   }
 
-  const loading = qas.some((qa) => qa._extraInfo?.loading)
+  const isSelected = useMemo(() => {
+    return selectedIds.length > 0
+  }, [selectedIds])
+
+  const isLoading = useMemo(() => {
+    return Object.values(loadings).some((loading) => loading)
+  }, [loadings])
 
   return (
     <div className="h-full flex flex-col overflow-hidden gap-2">
@@ -378,32 +205,62 @@ export function Workbench({ taskId }: WorkbenchProps) {
           <LetterTextIcon />
         </Toggle>
         <Button variant="outline" onClick={onFileSelect}>
-          {importing && <Loader className="animate-spin w-4 h-4 mr-2" />}Import
+          {importing && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
+          Import
         </Button>
         <Button variant="outline" onClick={onExport}>
-          {exporting && <Loader className="animate-spin w-4 h-4 mr-2" />}
+          {exporting && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
           {isSelected ? 'Export Selected' : 'Export'}
         </Button>
         <Button
           variant="outline"
           onClick={() => handleRun()}
-          disabled={loading}
+          disabled={isLoading}
         >
           {isSelected ? 'Run Selected' : 'Run All'}
         </Button>
       </div>
       <div className="flex-1 h-0">
-        <WorkbenchList
-          data={qas}
-          selectedIds={selectedIds}
-          isFormatOutput={isFormatOutput}
-          onPromptChange={handlePromptInputChange}
-          onRemove={handleRemove}
-          onSelect={handleSelect}
-          onRateChange={handleRateChange}
-          onRun={handleRun}
-          onExpectationChange={handleExpectationChange}
-        />
+        <ScrollArea className="h-full">
+          {client && (
+            <div className="flex flex-col gap-4 px-4">
+              {qas.map((qa, index) => (
+                <WorkbenchItem
+                  ref={(ref) => {
+                    if (ref) {
+                      itemRefs.current.set(qa.id, ref)
+                    } else {
+                      itemRefs.current.delete(qa.id)
+                    }
+                  }}
+                  key={qa.id}
+                  index={index}
+                  client={client}
+                  clientOptions={task?.openAIOptions}
+                  item={qa}
+                  checked={selectedIds.includes(qa.id)}
+                  handleCheck={(checked) => {
+                    if (checked) {
+                      setSelectedIds((prev) => [...prev, qa.id])
+                    } else {
+                      setSelectedIds((prev) =>
+                        prev.filter((id) => id !== qa.id)
+                      )
+                    }
+                  }}
+                  handleRemove={() => handleRemove(qa.id)}
+                  handleUpdateItemToDB={(item: QA) =>
+                    handleUpdateItemToDB(qa.id, item)
+                  }
+                  handleUpdateLoading={(loading) => {
+                    setLoadings((prev) => ({ ...prev, [qa.id]: loading }))
+                  }}
+                  formatOutput={isFormatOutput}
+                />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       </div>
       <input
         type="file"

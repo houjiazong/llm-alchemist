@@ -74,3 +74,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+.markdown {
+  @apply prose;
+}
+
+pre {
+  @apply p-4;
+  @apply rounded-lg;
+  @apply overflow-x-auto;
+  @apply border;
+  @apply border-gray-800;
+  background-color: black !important;
+}
