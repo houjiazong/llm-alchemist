@@ -7,6 +7,7 @@ import { OpenAIOptions, type QA } from '@/db'
 import { isEmpty, isEqual, isNil } from 'es-toolkit/compat'
 import {
   ChevronsLeftRightEllipsisIcon,
+  CircleXIcon,
   ClockIcon,
   InboxIcon,
   Loader2Icon,
@@ -89,6 +90,8 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     const noAnswer = isEmpty(answer) || isNil(answer)
     const noQuestion = isEmpty(question) || isNil(question)
 
+    const [error, setError] = useState('')
+
     useEffect(() => {
       setQuestion(item.question)
     }, [item.question])
@@ -98,6 +101,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setLoading(true)
       handleUpdateLoading(true)
       setFinished(false)
+      setAnswer('')
       const body: ChatCompletionCreateParamsBase = {
         messages: [
           {
@@ -187,6 +191,17 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             },
           })
         }
+      } catch (error) {
+        if (error instanceof OpenAI.RateLimitError) {
+          setError('Rate limit exceeded. Please try again later.')
+        } else if (error instanceof OpenAI.AuthenticationError) {
+          setError('Authentication failed. Check your API key.')
+        } else if (error instanceof OpenAI.APIError) {
+          setError(`API Error: ${error.message}`)
+        } else {
+          setError('An unexpected error occurred')
+        }
+        console.error(error)
       } finally {
         setLoading(false)
         handleUpdateLoading(false)
@@ -206,7 +221,6 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     ])
 
     const check = useCallback(() => {
-      console.log('check')
       handleCheck(!checked)
     }, [checked, handleCheck])
 
@@ -234,6 +248,48 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               <p>{answer}</p>
             )}
           </motion.div>
+        )
+      }
+      if (loading) {
+        return (
+          <div className="text-muted-foreground flex flex-col items-center gap-2">
+            <motion.div
+              key="loadingIcon"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-center"
+            >
+              <Loader2Icon className="w-6 h-6 animate-spin" />
+            </motion.div>
+          </div>
+        )
+      }
+      if (error) {
+        return (
+          <div className="text-muted-foreground flex flex-col items-center gap-2">
+            <motion.div
+              key="errorIcon"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-center text-destructive dark:text-red-800"
+            >
+              <CircleXIcon className="w-6 h-6" />
+            </motion.div>
+            <motion.p
+              key="errorTip"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="text-destructive dark:text-red-800"
+            >
+              {error}
+            </motion.p>
+          </div>
         )
       }
       if (noQuestion) {
