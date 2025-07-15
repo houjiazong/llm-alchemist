@@ -85,11 +85,7 @@ export const Message = memo(
       ],
       isStreamFinished,
       throttle: throttleBasic({
-        readAheadChars: 10, // 每次尝试预读一点点
-        targetBufferChars: 30, // 缓冲到30个字符就推送一次，尽量细粒度显示
-        adjustPercentage: 0.2, // 如果帧率下降，自动减少更新频率
-        frameLookBackMs: 300, // 最近300ms渲染帧率作为参考
-        windowLookBackMs: 1500, // 过去1.5秒整体帧率做趋势判断
+        targetBufferChars: 60,
       }),
     })
 
