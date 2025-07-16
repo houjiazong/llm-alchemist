@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { WorkbenchItem, WorkbenchItemRef } from './Item'
 import OpenAI from 'openai'
+import { StatusIndicator } from './StatusIndicator'
 
 interface WorkbenchProps {
   taskId: string
@@ -177,12 +178,15 @@ export function Workbench({ taskId }: WorkbenchProps) {
       const updatedItems = qas.map((item) =>
         item.id === id ? { ...item, ...newItem } : item
       )
-
       updateQASToDB(updatedItems)
       setQAS(updatedItems)
     },
     [qas, updateQASToDB]
   )
+
+  const scrollToItem = useCallback((id: string) => {
+    itemRefs.current.get(id)?.scrollIntoView()
+  }, [])
 
   const onFileSelect = () => {
     if (fileInputRef.current) {
@@ -200,25 +204,34 @@ export function Workbench({ taskId }: WorkbenchProps) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden gap-2">
-      <div className="flex-shrink-0 flex-grow-0 px-4 flex justify-end items-center gap-2">
-        <Toggle pressed={isFormatOutput} onPressedChange={setIsFormatOutput}>
-          <LetterTextIcon />
-        </Toggle>
-        <Button variant="outline" onClick={onFileSelect}>
-          {importing && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
-          Import
-        </Button>
-        <Button variant="outline" onClick={onExport}>
-          {exporting && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
-          {isSelected ? 'Export Selected' : 'Export'}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => handleRun()}
-          disabled={isLoading}
-        >
-          {isSelected ? 'Run Selected' : 'Run All'}
-        </Button>
+      <div className="flex-shrink-0 flex-grow-0 px-4 flex items-center gap-2">
+        <div className="flex-1">
+          <StatusIndicator
+            qas={qas}
+            loadings={loadings}
+            scrollToItem={scrollToItem}
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-grow-0">
+          <Toggle pressed={isFormatOutput} onPressedChange={setIsFormatOutput}>
+            <LetterTextIcon />
+          </Toggle>
+          <Button variant="outline" onClick={onFileSelect}>
+            {importing && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
+            Import
+          </Button>
+          <Button variant="outline" onClick={onExport}>
+            {exporting && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
+            {isSelected ? 'Export Selected' : 'Export'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleRun()}
+            disabled={isLoading}
+          >
+            {isSelected ? 'Run Selected' : 'Run All'}
+          </Button>
+        </div>
       </div>
       <div className="flex-1 h-0">
         <ScrollArea className="h-full">

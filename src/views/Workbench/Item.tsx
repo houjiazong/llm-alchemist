@@ -22,6 +22,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useRef,
   useState,
 } from 'react'
 import { motion } from 'motion/react'
@@ -44,6 +45,7 @@ interface WorkbenchItemProps {
 
 export interface WorkbenchItemRef {
   run: () => void
+  scrollIntoView: () => void
 }
 
 const formatNum = (num: number | null | undefined, suffix?: string) => {
@@ -69,6 +71,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     },
     ref
   ) => {
+    const containerRef = useRef<HTMLDivElement>(null)
     const [answer, setAnswer] = useState<string | undefined>(item.answer)
     const [question, setQuestion] = useState<string | undefined>(item.question)
 
@@ -91,7 +94,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     const noAnswer = isEmpty(answer) || isNil(answer)
     const noQuestion = isEmpty(question) || isNil(question)
 
-    const [error, setError] = useState('')
+    const [error, setError] = useState<string | undefined>(item.error)
 
     useEffect(() => {
       setQuestion(item.question)
@@ -99,7 +102,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
 
     const resetRuntimeState = useCallback(() => {
       setAnswer('')
-      setError('')
+      setError(undefined)
       setTTFT(null)
       setCompletion(null)
       setPromptTokens(undefined)
@@ -215,15 +218,21 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           })
         }
       } catch (error) {
+        let errStr
         if (error instanceof OpenAI.RateLimitError) {
-          setError('Rate limit exceeded. Please try again later.')
+          errStr = 'Rate limit exceeded. Please try again later.'
         } else if (error instanceof OpenAI.AuthenticationError) {
-          setError('Authentication failed. Check your API key.')
+          errStr = 'Authentication failed. Check your API key.'
         } else if (error instanceof OpenAI.APIError) {
-          setError(`API Error: ${error.message}`)
+          errStr = `API Error: ${error.message}`
         } else {
-          setError('An unexpected error occurred')
+          errStr = 'An unexpected error occurred'
         }
+        setError(errStr)
+        handleUpdateItemToDB({
+          ...item,
+          error: errStr,
+        })
         console.error(error)
       } finally {
         setLoading(false)
@@ -250,6 +259,12 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
 
     useImperativeHandle(ref, () => ({
       run,
+      scrollIntoView: () => {
+        containerRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      },
     }))
 
     const renderContent = () => {
@@ -367,7 +382,10 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     }
 
     return (
-      <div className="items-start gap-4 rounded-lg border text-left text-sm transition-all hover:bg-accent/30 grid grid-cols-6 shadow-sm">
+      <div
+        ref={containerRef}
+        className="items-start gap-4 rounded-lg border text-left text-sm transition-all hover:bg-accent/30 grid grid-cols-6 shadow-sm"
+      >
         <div className="col-span-6 sticky top-0 bg-accent/40 h-[48px] backdrop-blur-sm z-50 flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-bold">
