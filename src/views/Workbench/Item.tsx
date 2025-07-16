@@ -86,6 +86,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     const [totalTokens, setTotalTokens] = useState<number | undefined>(
       item.usage?.total_tokens
     )
+    const [model, setModel] = useState<string | undefined>(item.model)
 
     const noAnswer = isEmpty(answer) || isNil(answer)
     const noQuestion = isEmpty(question) || isNil(question)
@@ -96,12 +97,24 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setQuestion(item.question)
     }, [item.question])
 
+    const resetRuntimeState = useCallback(() => {
+      setAnswer('')
+      setError('')
+      setTTFT(null)
+      setCompletion(null)
+      setPromptTokens(undefined)
+      setCompletionTokens(undefined)
+      setTotalTokens(undefined)
+      setModel(undefined)
+    }, [])
+
     const run = useCallback(async () => {
       if (noQuestion) return
       setLoading(true)
       handleUpdateLoading(true)
       setFinished(false)
-      setAnswer('')
+      // 重置状态
+      resetRuntimeState()
       const body: ChatCompletionCreateParamsBase = {
         messages: [
           {
@@ -125,11 +138,13 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           const response = await client.chat.completions.create({
             ...body,
             stream: true,
+            stream_options: { include_usage: true },
           })
           let _answer = ''
           let _prompt_tokens
           let _completion_tokens
           let _total_tokens
+          let model
           for await (const chunk of response) {
             const now = performance.now()
             if (isFirstToken) {
@@ -145,12 +160,16 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               _prompt_tokens = chunk?.usage?.prompt_tokens
               _completion_tokens = chunk?.usage?.completion_tokens
               _total_tokens = chunk?.usage?.total_tokens
-              setPromptTokens(_prompt_tokens)
-              setCompletionTokens(_completion_tokens)
-              setTotalTokens(_total_tokens)
+            }
+            if (chunk.model) {
+              model = chunk.model
             }
           }
           setCompletion(performance.now() - startTime)
+          setPromptTokens(_prompt_tokens)
+          setCompletionTokens(_completion_tokens)
+          setTotalTokens(_total_tokens)
+          setModel(model)
 
           handleUpdateItemToDB({
             ...item,
@@ -160,6 +179,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               completion_tokens: _completion_tokens,
               total_tokens: _total_tokens,
             },
+            model,
           })
         } else {
           const startTime = performance.now()
@@ -175,11 +195,13 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           const prompt_tokens = response.usage?.prompt_tokens
           const completion_tokens = response.usage?.completion_tokens
           const total_tokens = response.usage?.total_tokens
+          const model = response.model
 
           setAnswer(response.choices[0].message.content || '')
           setPromptTokens(prompt_tokens)
           setCompletionTokens(completion_tokens)
           setTotalTokens(total_tokens)
+          setModel(model)
 
           handleUpdateItemToDB({
             ...item,
@@ -189,6 +211,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               completion_tokens,
               total_tokens,
             },
+            model,
           })
         }
       } catch (error) {
@@ -218,6 +241,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       item,
       noQuestion,
       question,
+      resetRuntimeState,
     ])
 
     const check = useCallback(() => {
@@ -407,13 +431,17 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         <div className="col-span-4 sticky top-[56px] pr-4 pb-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className="font-semibold bg-primary/10 text-primary hover:bg-primary/20"
-                >
-                  Output
-                </Badge>
+              <div className="flex items-center justify-between gap-2 w-full">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className="font-semibold bg-primary/10 text-primary hover:bg-primary/20"
+                  >
+                    Output
+                  </Badge>
+                  {model && <Badge className="font-bold">{model}</Badge>}
+                </div>
+
                 <Ratings
                   rating={Number(item.rate) || 0}
                   totalStars={5}

@@ -14,6 +14,7 @@ interface QA {
   expectation?: string
   expectationResult?: string
   usage?: LLMUsage
+  model?: string
 }
 
 interface OpenAIOptions {
