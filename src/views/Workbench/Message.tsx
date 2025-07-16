@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import type { CodeToHtmlOptions } from '@llm-ui/code'
 import {
   allLangs,
@@ -15,13 +17,15 @@ import {
   type LLMOutputComponent,
 } from '@llm-ui/react'
 import parseHtml from 'html-react-parser'
-import { memo } from 'react'
+import { CheckIcon, CopyIcon } from 'lucide-react'
+import { memo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { getHighlighterCore } from 'shiki/core'
 import { bundledLanguagesInfo } from 'shiki/langs'
 import { bundledThemes } from 'shiki/themes'
 import getWasm from 'shiki/wasm'
+import { useCopyToClipboard } from '@uidotdev/usehooks'
 
 const MarkdownComponent: LLMOutputComponent = ({ blockMatch }) => {
   const markdown = blockMatch.output
@@ -69,6 +73,9 @@ export const Message = memo(
     message: string
     isStreamFinished: boolean
   }) => {
+    const [, copyToClipboard] = useCopyToClipboard()
+    const [isCopied, setIsCopied] = useState(false)
+
     const { blockMatches } = useLLMOutput({
       llmOutput: message,
       fallbackBlock: {
@@ -89,8 +96,28 @@ export const Message = memo(
       }),
     })
 
+    const Icon = isCopied ? CheckIcon : CopyIcon
+
     return (
-      <div>
+      <div className="relative group">
+        <Button
+          className={cn(
+            'absolute -top-6 -right-2 !transition-opacity !ease-in !duration-150 group-hover:opacity-100 ',
+            isCopied ? 'opacity-100' : 'opacity-0'
+          )}
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            copyToClipboard(message)
+            setIsCopied(true)
+            setTimeout(() => {
+              setIsCopied(false)
+            }, 2000)
+          }}
+        >
+          <Icon className="h-4 w-4" />
+          {isCopied ? 'Copied' : 'Copy'}
+        </Button>
         {blockMatches.map((blockMatch, index) => {
           const Component = blockMatch.block.component
           return <Component key={index} blockMatch={blockMatch} />
