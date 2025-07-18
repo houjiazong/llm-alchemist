@@ -147,7 +147,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           let _prompt_tokens
           let _completion_tokens
           let _total_tokens
-          let model
+          let _model
           for await (const chunk of response) {
             const now = performance.now()
             if (isFirstToken) {
@@ -165,16 +165,11 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               _total_tokens = chunk?.usage?.total_tokens
             }
             if (chunk.model) {
-              model = chunk.model
+              _model = chunk.model
             }
           }
-          setCompletion(performance.now() - startTime)
-          setPromptTokens(_prompt_tokens)
-          setCompletionTokens(_completion_tokens)
-          setTotalTokens(_total_tokens)
-          setModel(model)
 
-          handleUpdateItemToDB({
+          await handleUpdateItemToDB({
             ...item,
             answer: _answer,
             usage: {
@@ -182,8 +177,14 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               completion_tokens: _completion_tokens,
               total_tokens: _total_tokens,
             },
-            model,
+            model: _model,
           })
+
+          setCompletion(performance.now() - startTime)
+          setPromptTokens(_prompt_tokens)
+          setCompletionTokens(_completion_tokens)
+          setTotalTokens(_total_tokens)
+          setModel(_model)
         } else {
           const startTime = performance.now()
           const response = await client.chat.completions.create({
@@ -200,13 +201,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           const total_tokens = response.usage?.total_tokens
           const model = response.model
 
-          setAnswer(response.choices[0].message.content || '')
-          setPromptTokens(prompt_tokens)
-          setCompletionTokens(completion_tokens)
-          setTotalTokens(total_tokens)
-          setModel(model)
-
-          handleUpdateItemToDB({
+          await handleUpdateItemToDB({
             ...item,
             answer,
             usage: {
@@ -216,6 +211,12 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             },
             model,
           })
+
+          setAnswer(answer)
+          setPromptTokens(prompt_tokens)
+          setCompletionTokens(completion_tokens)
+          setTotalTokens(total_tokens)
+          setModel(model)
         }
       } catch (error) {
         let errStr
@@ -229,7 +230,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           errStr = 'An unexpected error occurred'
         }
         setError(errStr)
-        handleUpdateItemToDB({
+        await handleUpdateItemToDB({
           ...item,
           error: errStr,
         })
@@ -432,8 +433,8 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               <TextareaAutosize
                 className="w-full shadow-none border text-sm px-3 py-2 text-foreground hover:border-border focus:border-secondary/50 transition-colors resize-none"
                 value={item.question}
-                onChange={(e) =>
-                  handleUpdateItemToDB({
+                onChange={async (e) =>
+                  await handleUpdateItemToDB({
                     ...item,
                     question: e.target.value,
                   })

@@ -63,8 +63,8 @@ export function Workbench({ taskId }: WorkbenchProps) {
   }, [qas])
 
   const updateQASToDB = useCallback(
-    (data: QA[]) => {
-      db.tasks.update(taskId, {
+    async (data: QA[]) => {
+      await db.tasks.update(taskId, {
         qas: data.filter((qa) => !isNil(qa.question) && !isEmpty(qa.question)),
       })
     },
@@ -165,21 +165,21 @@ export function Workbench({ taskId }: WorkbenchProps) {
   }
 
   const handleRemove = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const updatedItems = qas.filter((item) => item.id !== id)
-      updateQASToDB(updatedItems)
+      await updateQASToDB(updatedItems)
       setQAS(updatedItems)
     },
     [qas, updateQASToDB]
   )
 
   const handleUpdateItemToDB = useCallback(
-    (id: string, newItem: QA) => {
+    async (id: string, newItem: QA) => {
       const updatedItems = qas.map((item) =>
         item.id === id ? { ...item, ...newItem } : item
       )
-      updateQASToDB(updatedItems)
       setQAS(updatedItems)
+      await updateQASToDB(updatedItems)
     },
     [qas, updateQASToDB]
   )
@@ -261,9 +261,9 @@ export function Workbench({ taskId }: WorkbenchProps) {
                       )
                     }
                   }}
-                  handleRemove={() => handleRemove(qa.id)}
-                  handleUpdateItemToDB={(item: QA) =>
-                    handleUpdateItemToDB(qa.id, item)
+                  handleRemove={async () => await handleRemove(qa.id)}
+                  handleUpdateItemToDB={async (item: QA) =>
+                    await handleUpdateItemToDB(qa.id, item)
                   }
                   handleUpdateLoading={(loading) => {
                     setLoadings((prev) => ({ ...prev, [qa.id]: loading }))
