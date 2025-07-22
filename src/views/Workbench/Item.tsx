@@ -230,9 +230,11 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           errStr = 'An unexpected error occurred'
         }
         setError(errStr)
+        setAnswer('')
         await handleUpdateItemToDB({
           ...item,
           error: errStr,
+          answer: '',
         })
         console.error(error)
       } finally {
