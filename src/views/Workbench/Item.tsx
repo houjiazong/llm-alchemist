@@ -233,12 +233,22 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         } else {
           errStr = 'An unexpected error occurred'
         }
-        setError(errStr)
         setAnswer('')
+        setPromptTokens(undefined)
+        setCompletionTokens(undefined)
+        setTotalTokens(undefined)
+        setModel('')
+        setError(errStr)
         await handleUpdateItemToDB({
           ...item,
-          error: errStr,
           answer: '',
+          usage: {
+            prompt_tokens: undefined,
+            completion_tokens: undefined,
+            total_tokens: undefined,
+          },
+          model: '',
+          error: errStr,
         })
         console.error(error)
       } finally {
