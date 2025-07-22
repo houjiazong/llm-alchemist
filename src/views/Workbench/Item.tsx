@@ -178,6 +178,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               total_tokens: _total_tokens,
             },
             model: _model,
+            error: '',
           })
 
           setCompletion(performance.now() - startTime)
@@ -185,6 +186,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           setCompletionTokens(_completion_tokens)
           setTotalTokens(_total_tokens)
           setModel(_model)
+          setError('')
         } else {
           const startTime = performance.now()
           const response = await client.chat.completions.create({
@@ -210,6 +212,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               total_tokens,
             },
             model,
+            error: '',
           })
 
           setAnswer(answer)
@@ -217,6 +220,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           setCompletionTokens(completion_tokens)
           setTotalTokens(total_tokens)
           setModel(model)
+          setError('')
         }
       } catch (error) {
         let errStr
