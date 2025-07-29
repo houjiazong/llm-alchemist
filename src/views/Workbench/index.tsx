@@ -30,18 +30,22 @@ export function Workbench({ taskId }: WorkbenchProps) {
   const [loadings, setLoadings] = useState<{ [id: string]: boolean }>({})
 
   const client = useMemo(() => {
-    if (!task?.openAIOptions?.apiKey || !task?.openAIOptions?.baseURL) {
-      return
-    }
     return new OpenAI({
-      apiKey: task.openAIOptions.apiKey,
-      baseURL: `${import.meta.env.VITE_PROXY_URL}${task.openAIOptions.baseURL}`,
+      apiKey: task?.openAIOptions?.apiKey ?? '',
+      baseURL: `${import.meta.env.VITE_PROXY_URL}${task?.openAIOptions?.baseURL ?? ''}`,
       dangerouslyAllowBrowser: true,
     })
   }, [task?.openAIOptions?.apiKey, task?.openAIOptions?.baseURL])
 
   useEffect(() => {
-    if (isNil(task?.qas) || isEmpty(task?.qas)) return
+    setQAS([])
+    setSelectedIds([])
+    itemRefs.current = new Map()
+    setLoadings({})
+    if (isNil(task?.qas) || isEmpty(task?.qas)) {
+      setQAS([{ id: uuidv4(), question: '' }])
+      return
+    }
     setQAS(task.qas)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id])
@@ -237,40 +241,42 @@ export function Workbench({ taskId }: WorkbenchProps) {
         <ScrollArea className="h-full">
           {client && (
             <div className="flex flex-col gap-4 px-4">
-              {qas.map((qa, index) => (
-                <WorkbenchItem
-                  ref={(ref) => {
-                    if (ref) {
-                      itemRefs.current.set(qa.id, ref)
-                    } else {
-                      itemRefs.current.delete(qa.id)
+              {qas.map((qa, index) => {
+                return (
+                  <WorkbenchItem
+                    ref={(ref) => {
+                      if (ref) {
+                        itemRefs.current.set(qa.id, ref)
+                      } else {
+                        itemRefs.current.delete(qa.id)
+                      }
+                    }}
+                    key={qa.id}
+                    index={index}
+                    client={client}
+                    clientOptions={task?.openAIOptions}
+                    item={qa}
+                    checked={selectedIds.includes(qa.id)}
+                    handleCheck={(checked) => {
+                      if (checked) {
+                        setSelectedIds((prev) => [...prev, qa.id])
+                      } else {
+                        setSelectedIds((prev) =>
+                          prev.filter((id) => id !== qa.id)
+                        )
+                      }
+                    }}
+                    handleRemove={async () => await handleRemove(qa.id)}
+                    handleUpdateItemToDB={async (item: QA) =>
+                      await handleUpdateItemToDB(qa.id, item)
                     }
-                  }}
-                  key={qa.id}
-                  index={index}
-                  client={client}
-                  clientOptions={task?.openAIOptions}
-                  item={qa}
-                  checked={selectedIds.includes(qa.id)}
-                  handleCheck={(checked) => {
-                    if (checked) {
-                      setSelectedIds((prev) => [...prev, qa.id])
-                    } else {
-                      setSelectedIds((prev) =>
-                        prev.filter((id) => id !== qa.id)
-                      )
-                    }
-                  }}
-                  handleRemove={async () => await handleRemove(qa.id)}
-                  handleUpdateItemToDB={async (item: QA) =>
-                    await handleUpdateItemToDB(qa.id, item)
-                  }
-                  handleUpdateLoading={(loading) => {
-                    setLoadings((prev) => ({ ...prev, [qa.id]: loading }))
-                  }}
-                  formatOutput={isFormatOutput}
-                />
-              ))}
+                    handleUpdateLoading={(loading) => {
+                      setLoadings((prev) => ({ ...prev, [qa.id]: loading }))
+                    }}
+                    formatOutput={isFormatOutput}
+                  />
+                )
+              })}
             </div>
           )}
         </ScrollArea>
