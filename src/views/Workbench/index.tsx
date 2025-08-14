@@ -10,8 +10,8 @@ import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { WorkbenchItem, WorkbenchItemRef } from './Item'
-import OpenAI from 'openai'
 import { StatusIndicator } from './StatusIndicator'
+import Viv from '@yomo/viv'
 
 interface WorkbenchProps {
   taskId: string
@@ -30,10 +30,18 @@ export function Workbench({ taskId }: WorkbenchProps) {
   const [loadings, setLoadings] = useState<{ [id: string]: boolean }>({})
 
   const client = useMemo(() => {
-    return new OpenAI({
-      apiKey: task?.openAIOptions?.apiKey ?? '',
+    if (
+      isNil(task?.openAIOptions?.apiKey) ||
+      isEmpty(task?.openAIOptions?.apiKey) ||
+      isNil(task?.openAIOptions?.baseURL) ||
+      isEmpty(task?.openAIOptions?.baseURL)
+    ) {
+      return null
+    }
+    return new Viv({
       baseURL: `${import.meta.env.VITE_PROXY_URL}${task?.openAIOptions?.baseURL ?? ''}`,
-      dangerouslyAllowBrowser: true,
+      apiKey: task?.openAIOptions?.apiKey ?? '',
+      maxRetries: 0,
     })
   }, [task?.openAIOptions?.apiKey, task?.openAIOptions?.baseURL])
 

@@ -1,3 +1,4 @@
+import { type FunctionCall } from '@yomo/viv'
 import Dexie, { type EntityTable } from 'dexie'
 
 export interface LLMUsage {
@@ -16,6 +17,7 @@ interface QA {
   usage?: LLMUsage
   model?: string
   error?: string
+  functionCall?: FunctionCall
 }
 
 interface OpenAIOptions {
@@ -46,7 +48,7 @@ const db = new Dexie('la') as Dexie & {
   tasks: EntityTable<Task, 'id'>
 }
 
-db.version(2).stores(DB_STRUCTURE)
+db.version(3).stores(DB_STRUCTURE)
 
 export type { Task, QA, OpenAIOptions }
 export { db }
