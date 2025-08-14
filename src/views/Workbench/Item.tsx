@@ -6,7 +6,10 @@ import { TextareaAutosize } from '@/components/ui/textarea-autosize'
 import { OpenAIOptions, type QA } from '@/db'
 import { isEmpty, isEqual, isNil } from 'es-toolkit/compat'
 import {
+  CheckIcon,
+  ChevronDownIcon,
   ChevronsLeftRightEllipsisIcon,
+  ChevronUpIcon,
   CircleXIcon,
   ClockIcon,
   InboxIcon,
@@ -15,7 +18,6 @@ import {
   SparklesIcon,
   TrashIcon,
 } from 'lucide-react'
-import OpenAI from 'openai'
 import {
   forwardRef,
   memo,
@@ -28,11 +30,15 @@ import {
 import { motion } from 'motion/react'
 import { Message } from './Message'
 import numeral from 'numeral'
-import { ChatCompletionCreateParamsBase } from 'openai/resources/chat/completions.mjs'
+import Viv, {
+  type Message as VivMessage,
+  type TokenUsageChunk,
+  type FunctionCall,
+} from '@yomo/viv'
 
 interface WorkbenchItemProps {
   index: number
-  client: OpenAI
+  client: Viv
   clientOptions: OpenAIOptions | undefined
   item: QA
   checked?: boolean
@@ -96,6 +102,12 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
 
     const [error, setError] = useState<string | undefined>(item.error)
 
+    const [functionCall, setFunctionCall] = useState<FunctionCall | undefined>(
+      item.functionCall
+    )
+
+    const [isCollapsedFunctionCall, setIsCollapsedFunctionCall] = useState(true)
+
     useEffect(() => {
       setQuestion(item.question)
     }, [item.question])
@@ -109,6 +121,8 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setCompletionTokens(undefined)
       setTotalTokens(undefined)
       setModel(undefined)
+      setFunctionCall(undefined)
+      setIsCollapsedFunctionCall(true)
     }, [])
 
     const run = useCallback(async () => {
@@ -118,120 +132,80 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setFinished(false)
       // 重置状态
       resetRuntimeState()
-      const body: ChatCompletionCreateParamsBase = {
-        messages: [
-          {
-            role: 'user',
-            content: question as string,
-          },
-        ],
-        temperature: clientOptions?.params.temperature,
-        model: clientOptions?.params.model ?? '',
-      }
-      if (clientOptions?.params.model) {
-        body.model = clientOptions?.params.model
-      }
-      if (clientOptions?.params.max_tokens) {
-        body.max_completion_tokens = clientOptions?.params.max_tokens
-      }
       try {
-        if (clientOptions?.params.stream) {
-          const startTime = performance.now()
-          let isFirstToken = true
-          const response = await client.chat.completions.create({
-            ...body,
-            stream: true,
-            stream_options: { include_usage: true },
-          })
-          let _answer = ''
-          let _prompt_tokens
-          let _completion_tokens
-          let _total_tokens
-          let _model
-          for await (const chunk of response) {
-            const now = performance.now()
-            if (isFirstToken) {
-              isFirstToken = false
-              setTTFT(now - startTime)
-            }
-            const content = chunk.choices?.[0]?.delta?.content || ''
-            if (content) {
-              _answer += content
+        const startTime = performance.now()
+        let isFirstToken = true
+        const stream = await client.chat.completions.stream({
+          messages: [
+            {
+              role: 'user',
+              content: question as string,
+            },
+          ] as VivMessage[],
+          temperature: clientOptions?.params.temperature,
+          max_completion_tokens: clientOptions?.params.max_tokens,
+        })
+        let _answer = ''
+        let _prompt_tokens
+        let _completion_tokens
+        let _total_tokens
+        let _model
+        let _functionCall
+        for await (const chunk of stream) {
+          const now = performance.now()
+          if (isFirstToken) {
+            isFirstToken = false
+            setTTFT(now - startTime)
+          }
+          if (chunk.type === 'content') {
+            if (chunk.data) {
+              _answer += chunk.data
               setAnswer(_answer)
             }
-            if (chunk.usage) {
-              _prompt_tokens = chunk?.usage?.prompt_tokens
-              _completion_tokens = chunk?.usage?.completion_tokens
-              _total_tokens = chunk?.usage?.total_tokens
-            }
-            if (chunk.model) {
-              _model = chunk.model
+          }
+          if (chunk.type === 'usage') {
+            if (chunk.data) {
+              const usage = chunk?.data as TokenUsageChunk
+              _prompt_tokens = usage?.prompt_tokens
+              _completion_tokens = usage?.completion_tokens
+              _total_tokens = usage?.total_tokens
             }
           }
-
-          await handleUpdateItemToDB({
-            ...item,
-            answer: _answer,
-            usage: {
-              prompt_tokens: _prompt_tokens,
-              completion_tokens: _completion_tokens,
-              total_tokens: _total_tokens,
-            },
-            model: _model,
-            error: '',
-          })
-
-          setCompletion(performance.now() - startTime)
-          setPromptTokens(_prompt_tokens)
-          setCompletionTokens(_completion_tokens)
-          setTotalTokens(_total_tokens)
-          setModel(_model)
-          setError('')
-        } else {
-          const startTime = performance.now()
-          const response = await client.chat.completions.create({
-            ...body,
-            stream: false,
-          })
-          const endTime = performance.now() - startTime
-          setTTFT(endTime)
-          setCompletion(endTime)
-
-          const answer = response.choices[0].message.content || ''
-          const prompt_tokens = response.usage?.prompt_tokens
-          const completion_tokens = response.usage?.completion_tokens
-          const total_tokens = response.usage?.total_tokens
-          const model = response.model
-
-          await handleUpdateItemToDB({
-            ...item,
-            answer,
-            usage: {
-              prompt_tokens,
-              completion_tokens,
-              total_tokens,
-            },
-            model,
-            error: '',
-          })
-
-          setAnswer(answer)
-          setPromptTokens(prompt_tokens)
-          setCompletionTokens(completion_tokens)
-          setTotalTokens(total_tokens)
-          setModel(model)
-          setError('')
+          if (chunk.type === 'model') {
+            if (chunk.data) {
+              _model = chunk.data as string
+            }
+          }
+          if (chunk.type === 'functionCall') {
+            if (chunk.data) {
+              _functionCall = chunk.data as unknown as FunctionCall
+              setFunctionCall(_functionCall)
+            }
+          }
         }
+        await handleUpdateItemToDB({
+          ...item,
+          answer: _answer,
+          usage: {
+            prompt_tokens: _prompt_tokens,
+            completion_tokens: _completion_tokens,
+            total_tokens: _total_tokens,
+          },
+          model: _model,
+          functionCall: _functionCall,
+          error: '',
+        })
+
+        setCompletion(performance.now() - startTime)
+        setPromptTokens(_prompt_tokens)
+        setCompletionTokens(_completion_tokens)
+        setTotalTokens(_total_tokens)
+        setModel(_model)
+        setError('')
       } catch (error) {
         let errStr
-        if (error instanceof OpenAI.RateLimitError) {
-          errStr = 'Rate limit exceeded. Please try again later.'
-        } else if (error instanceof OpenAI.AuthenticationError) {
-          errStr = 'Authentication failed. Check your API key.'
-        } else if (error instanceof OpenAI.APIError) {
-          errStr = `API Error: ${error.message}`
-        } else {
-          errStr = 'An unexpected error occurred'
+        if (error instanceof Error && error.name === 'VivAPIError') {
+          errStr = error?.message
         }
         setAnswer('')
         setPromptTokens(undefined)
@@ -259,8 +233,6 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     }, [
       client.chat.completions,
       clientOptions?.params.max_tokens,
-      clientOptions?.params.model,
-      clientOptions?.params.stream,
       clientOptions?.params.temperature,
       handleUpdateItemToDB,
       handleUpdateLoading,
@@ -285,7 +257,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     }))
 
     const renderContent = () => {
-      if (!noAnswer) {
+      if (!noAnswer || functionCall) {
         return (
           <motion.div
             key="answer"
@@ -294,7 +266,40 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
           >
-            {formatOutput ? (
+            {functionCall && (
+              <div className="mb-4 flex w-full flex-col gap-3 rounded-lg border py-3">
+                <div className="flex items-center gap-2 px-4">
+                  <CheckIcon className="size-4" />
+                  <p className="">
+                    Used tool: <b>{functionCall?.name}</b>
+                  </p>
+                  <div className="flex-grow" />
+                  <Button
+                    onClick={() =>
+                      setIsCollapsedFunctionCall(!isCollapsedFunctionCall)
+                    }
+                  >
+                    {isCollapsedFunctionCall ? (
+                      <ChevronUpIcon />
+                    ) : (
+                      <ChevronDownIcon />
+                    )}
+                  </Button>
+                </div>
+                {!isCollapsedFunctionCall && (
+                  <div className="flex flex-col gap-2 border-t pt-2">
+                    <div className="px-4">
+                      <pre className="whitespace-pre-wrap text-secondary dark:text-secondary-foreground">
+                        {typeof functionCall?.arguments === 'string'
+                          ? functionCall?.arguments
+                          : JSON.stringify(functionCall?.arguments, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {formatOutput && !noAnswer ? (
               <Message
                 key={item.id}
                 message={answer}
