@@ -26,6 +26,7 @@ export function Workbench({ taskId }: WorkbenchProps) {
   const [qas, setQAS] = useState<QA[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const itemRefs = useRef<Map<string, WorkbenchItemRef>>(new Map())
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const [loadings, setLoadings] = useState<{ [id: string]: boolean }>({})
 
@@ -46,6 +47,10 @@ export function Workbench({ taskId }: WorkbenchProps) {
   }, [task?.openAIOptions?.apiKey, task?.openAIOptions?.baseURL])
 
   useEffect(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    abortControllerRef.current = new AbortController()
     setQAS([])
     setSelectedIds([])
     itemRefs.current = new Map()
@@ -57,6 +62,14 @@ export function Workbench({ taskId }: WorkbenchProps) {
     setQAS(task.qas)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id])
+
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const lastQA = qas[qas.length - 1]
@@ -265,6 +278,7 @@ export function Workbench({ taskId }: WorkbenchProps) {
                     clientOptions={task?.openAIOptions}
                     item={qa}
                     checked={selectedIds.includes(qa.id)}
+                    abortSignal={abortControllerRef.current?.signal}
                     handleCheck={(checked) => {
                       if (checked) {
                         setSelectedIds((prev) => [...prev, qa.id])

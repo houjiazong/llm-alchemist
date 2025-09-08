@@ -42,6 +42,7 @@ interface WorkbenchItemProps {
   clientOptions: OpenAIOptions | undefined
   item: QA
   checked?: boolean
+  abortSignal?: AbortSignal
   handleCheck: (checked: boolean) => void
   handleRemove: () => void
   handleUpdateItemToDB: (item: QA) => void
@@ -69,6 +70,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       clientOptions,
       item,
       checked,
+      abortSignal,
       handleCheck,
       handleRemove,
       handleUpdateItemToDB,
@@ -133,6 +135,9 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       // 重置状态
       resetRuntimeState()
       try {
+        if (abortSignal?.aborted) {
+          return
+        }
         const startTime = performance.now()
         let isFirstToken = true
         const stream = await client.chat.completions.stream({
@@ -144,6 +149,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           ] as VivMessage[],
           temperature: clientOptions?.params.temperature,
           max_completion_tokens: clientOptions?.params.max_tokens,
+          signal: abortSignal,
         })
         let _answer = ''
         let _prompt_tokens
@@ -152,6 +158,10 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         let _model
         let _functionCall
         for await (const chunk of stream) {
+          if (abortSignal?.aborted) {
+            console.log('Operation aborted during streaming')
+            return
+          }
           const now = performance.now()
           if (isFirstToken) {
             isFirstToken = false
@@ -183,6 +193,10 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             }
           }
         }
+        if (abortSignal?.aborted) {
+          console.log('Operation aborted before database update')
+          return
+        }
         await handleUpdateItemToDB({
           ...item,
           answer: _answer,
@@ -203,6 +217,11 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         setModel(_model)
         setError('')
       } catch (error) {
+        if (abortSignal?.aborted) {
+          console.log('Operation was aborted')
+          return
+        }
+
         let errStr
         if (error instanceof Error && error.name === 'VivAPIError') {
           errStr = error?.message
@@ -240,6 +259,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       noQuestion,
       question,
       resetRuntimeState,
+      abortSignal,
     ])
 
     const check = useCallback(() => {
@@ -541,6 +561,7 @@ export const WorkbenchItem = memo(Item, (props, nextProps) => {
     isEqual(props.clientOptions, nextProps.clientOptions) &&
     isEqual(props.item, nextProps.item) &&
     props.checked === nextProps.checked &&
-    props.formatOutput === nextProps.formatOutput
+    props.formatOutput === nextProps.formatOutput &&
+    props.abortSignal === nextProps.abortSignal
   )
 })
