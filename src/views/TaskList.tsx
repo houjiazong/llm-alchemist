@@ -72,7 +72,7 @@ export const TaskList = () => {
                   <div className="flex-1 w-0 truncate">{task.name}</div>
                 </CardTitle>
                 <CardDescription className="flex flex-col gap-2">
-                  {task.desc && <div>{task.desc}</div>}
+                  {task.desc && <div className="break-all">{task.desc}</div>}
                   <div className="flex gap-2 items-center">
                     <div className="flex-1 truncate w-0 text-gray-400 text-xs">
                       {formatDistanceToNow(task.created_at, {
