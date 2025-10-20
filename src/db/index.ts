@@ -17,7 +17,7 @@ interface QA {
   usage?: LLMUsage
   model?: string
   error?: string
-  functionCall?: FunctionCall
+  functionCalls?: FunctionCall[]
 }
 
 interface OpenAIOptions {
@@ -48,7 +48,7 @@ const db = new Dexie('la') as Dexie & {
   tasks: EntityTable<Task, 'id'>
 }
 
-db.version(3).stores(DB_STRUCTURE)
+db.version(4).stores(DB_STRUCTURE)
 
 export type { Task, QA, OpenAIOptions }
 export { db }

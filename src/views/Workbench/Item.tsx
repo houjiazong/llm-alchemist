@@ -6,10 +6,7 @@ import { TextareaAutosize } from '@/components/ui/textarea-autosize'
 import { OpenAIOptions, type QA } from '@/db'
 import { isEmpty, isEqual, isNil } from 'es-toolkit/compat'
 import {
-  CheckIcon,
-  ChevronDownIcon,
   ChevronsLeftRightEllipsisIcon,
-  ChevronUpIcon,
   CircleXIcon,
   ClockIcon,
   InboxIcon,
@@ -35,6 +32,7 @@ import Viv, {
   type TokenUsageChunk,
   type FunctionCall,
 } from '@yomo/viv'
+import { FunctionCallBlock } from './FunctionCallBlock'
 
 interface WorkbenchItemProps {
   index: number
@@ -104,11 +102,9 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
 
     const [error, setError] = useState<string | undefined>(item.error)
 
-    const [functionCall, setFunctionCall] = useState<FunctionCall | undefined>(
-      item.functionCall
-    )
-
-    const [isCollapsedFunctionCall, setIsCollapsedFunctionCall] = useState(true)
+    const [functionCalls, setFunctionCalls] = useState<
+      FunctionCall[] | undefined
+    >(item.functionCalls)
 
     useEffect(() => {
       setQuestion(item.question)
@@ -123,8 +119,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setCompletionTokens(undefined)
       setTotalTokens(undefined)
       setModel(undefined)
-      setFunctionCall(undefined)
-      setIsCollapsedFunctionCall(true)
+      setFunctionCalls(undefined)
     }, [])
 
     const run = useCallback(async () => {
@@ -156,7 +151,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         let _completion_tokens
         let _total_tokens
         let _model
-        let _functionCall
+        let _functionCalls: FunctionCall[] | undefined
         for await (const chunk of stream) {
           if (abortSignal?.aborted) {
             console.log('Operation aborted during streaming')
@@ -188,8 +183,11 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           }
           if (chunk.type === 'functionCall') {
             if (chunk.data) {
-              _functionCall = chunk.data as unknown as FunctionCall
-              setFunctionCall(_functionCall)
+              if (!_functionCalls) {
+                _functionCalls = []
+              }
+              _functionCalls.push(chunk.data as unknown as FunctionCall)
+              setFunctionCalls([..._functionCalls])
             }
           }
         }
@@ -206,7 +204,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             total_tokens: _total_tokens,
           },
           model: _model,
-          functionCall: _functionCall,
+          functionCalls: _functionCalls,
           error: '',
         })
 
@@ -277,7 +275,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     }))
 
     const renderContent = () => {
-      if (!noAnswer || functionCall) {
+      if (!noAnswer || functionCalls) {
         return (
           <motion.div
             key="answer"
@@ -286,37 +284,11 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
           >
-            {functionCall && (
-              <div className="mb-4 flex w-full flex-col gap-3 rounded-lg border py-3">
-                <div className="flex items-center gap-2 px-4">
-                  <CheckIcon className="size-4" />
-                  <p className="">
-                    Used tool: <b>{functionCall?.name}</b>
-                  </p>
-                  <div className="flex-grow" />
-                  <Button
-                    onClick={() =>
-                      setIsCollapsedFunctionCall(!isCollapsedFunctionCall)
-                    }
-                  >
-                    {isCollapsedFunctionCall ? (
-                      <ChevronUpIcon />
-                    ) : (
-                      <ChevronDownIcon />
-                    )}
-                  </Button>
-                </div>
-                {!isCollapsedFunctionCall && (
-                  <div className="flex flex-col gap-2 border-t pt-2">
-                    <div className="px-4">
-                      <pre className="whitespace-pre-wrap text-secondary dark:text-secondary-foreground">
-                        {typeof functionCall?.arguments === 'string'
-                          ? functionCall?.arguments
-                          : JSON.stringify(functionCall?.arguments, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
+            {functionCalls && functionCalls.length > 0 && (
+              <div className="space-y-2">
+                {functionCalls.map((item, index) => {
+                  return <FunctionCallBlock key={index} data={item} />
+                })}
               </div>
             )}
             {formatOutput && !noAnswer ? (
