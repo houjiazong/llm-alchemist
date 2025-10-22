@@ -26,11 +26,18 @@ import { bundledLanguagesInfo } from 'shiki/langs'
 import { bundledThemes } from 'shiki/themes'
 import getWasm from 'shiki/wasm'
 import { useCopyToClipboard } from '@uidotdev/usehooks'
+import { ClassValue } from 'clsx'
 
-const MarkdownComponent: LLMOutputComponent = ({ blockMatch }) => {
+const MarkdownComponent: LLMOutputComponent<{ className?: ClassValue }> = ({
+  className,
+  blockMatch,
+}) => {
   const markdown = blockMatch.output
   return (
-    <ReactMarkdown className="markdown" remarkPlugins={[remarkGfm]}>
+    <ReactMarkdown
+      className={cn('markdown', className)}
+      remarkPlugins={[remarkGfm]}
+    >
       {markdown}
     </ReactMarkdown>
   )
@@ -67,9 +74,11 @@ const CodeBlock: LLMOutputComponent = ({ blockMatch }) => {
 
 export const Message = memo(
   ({
+    markdownClassName,
     message,
     isStreamFinished,
   }: {
+    markdownClassName?: ClassValue
     message: string
     isStreamFinished: boolean
   }) => {
@@ -79,7 +88,9 @@ export const Message = memo(
     const { blockMatches } = useLLMOutput({
       llmOutput: message,
       fallbackBlock: {
-        component: MarkdownComponent,
+        component: (props) => (
+          <MarkdownComponent className={markdownClassName} {...props} />
+        ),
         lookBack: markdownLookBack(),
       },
       blocks: [
@@ -127,6 +138,7 @@ export const Message = memo(
   },
   (prevProps, nextProps) => {
     return (
+      prevProps.markdownClassName === nextProps.markdownClassName &&
       prevProps.message === nextProps.message &&
       prevProps.isStreamFinished === nextProps.isStreamFinished
     )

@@ -18,6 +18,7 @@ interface QA {
   model?: string
   error?: string
   functionCalls?: FunctionCall[]
+  reasoning?: string
 }
 
 interface OpenAIOptions {
@@ -48,7 +49,7 @@ const db = new Dexie('la') as Dexie & {
   tasks: EntityTable<Task, 'id'>
 }
 
-db.version(4).stores(DB_STRUCTURE)
+db.version(5).stores(DB_STRUCTURE)
 
 export type { Task, QA, OpenAIOptions }
 export { db }
