@@ -6,6 +6,9 @@ import { TextareaAutosize } from '@/components/ui/textarea-autosize'
 import { OpenAIOptions, type QA } from '@/db'
 import { isEmpty, isEqual, isNil } from 'es-toolkit/compat'
 import {
+  BrainIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   ChevronsLeftRightEllipsisIcon,
   CircleXIcon,
   ClockIcon,
@@ -97,14 +100,21 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     )
     const [model, setModel] = useState<string | undefined>(item.model)
 
-    const noAnswer = isEmpty(answer) || isNil(answer)
-    const noQuestion = isEmpty(question) || isNil(question)
-
     const [error, setError] = useState<string | undefined>(item.error)
 
     const [functionCalls, setFunctionCalls] = useState<
       FunctionCall[] | undefined
     >(item.functionCalls)
+
+    const [reasoningFinished, setReasoningFinished] = useState(true)
+    const [reasoning, setReasoning] = useState<string | undefined>(
+      item.reasoning
+    )
+    const [reasoningCollapsed, setReasoningCollapsed] = useState(false)
+
+    const noAnswer = isEmpty(answer) || isNil(answer)
+    const noQuestion = isEmpty(question) || isNil(question)
+    const noReasoning = isEmpty(reasoning) || isNil(reasoning)
 
     useEffect(() => {
       setQuestion(item.question)
@@ -120,6 +130,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setTotalTokens(undefined)
       setModel(undefined)
       setFunctionCalls(undefined)
+      setReasoning(undefined)
     }, [])
 
     const run = useCallback(async () => {
@@ -146,6 +157,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           max_completion_tokens: clientOptions?.params.max_tokens,
           signal: abortSignal,
         })
+        let _reasoning = ''
         let _answer = ''
         let _prompt_tokens
         let _completion_tokens
@@ -162,8 +174,16 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             isFirstToken = false
             setTTFT(now - startTime)
           }
+          if (chunk.type === 'reasoning') {
+            if (chunk.data) {
+              setReasoningFinished(false)
+              _reasoning += chunk.data
+              setReasoning(_reasoning)
+            }
+          }
           if (chunk.type === 'content') {
             if (chunk.data) {
+              setReasoningFinished(true)
               _answer += chunk.data
               setAnswer(_answer)
             }
@@ -197,6 +217,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         }
         await handleUpdateItemToDB({
           ...item,
+          reasoning: _reasoning,
           answer: _answer,
           usage: {
             prompt_tokens: _prompt_tokens,
@@ -224,6 +245,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         if (error instanceof Error && error.name === 'VivAPIError') {
           errStr = error?.message
         }
+        setReasoning('')
         setAnswer('')
         setPromptTokens(undefined)
         setCompletionTokens(undefined)
@@ -232,6 +254,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         setError(errStr)
         await handleUpdateItemToDB({
           ...item,
+          reasoning: '',
           answer: '',
           usage: {
             prompt_tokens: undefined,
@@ -246,6 +269,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         setLoading(false)
         handleUpdateLoading(false)
         setFinished(true)
+        setReasoningFinished(true)
       }
     }, [
       client.chat.completions,
@@ -275,7 +299,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     }))
 
     const renderContent = () => {
-      if (!noAnswer || functionCalls) {
+      if (!noAnswer || !noReasoning || functionCalls) {
         return (
           <motion.div
             key="answer"
@@ -284,6 +308,38 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
           >
+            {!noReasoning && (
+              <div>
+                <div
+                  className="font-semibold text-muted-foreground text-base cursor-pointer flex items-center gap-2 select-none"
+                  onClick={() => {
+                    setReasoningCollapsed((prev) => !prev)
+                  }}
+                >
+                  Reasoning
+                  {reasoningCollapsed ? (
+                    <ChevronRightIcon className="size-5" />
+                  ) : (
+                    <ChevronDownIcon className="size-5" />
+                  )}
+                </div>
+                {!reasoningCollapsed && (
+                  <div className="relative pl-6">
+                    <div className="absolute left-0 top-0 bottom-0 flex flex-col items-center gap-2">
+                      <BrainIcon className="size-4 text-muted-foreground shrink-0 grow-0" />
+                      <div className="w-[1px] flex-1 bg-muted-foreground/20"></div>
+                    </div>
+                    <Message
+                      markdownClassName="!text-xs !text-muted-foreground !max-w-3xl"
+                      key={item.id}
+                      message={reasoning}
+                      isStreamFinished={reasoningFinished}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {functionCalls && functionCalls.length > 0 && (
               <div className="space-y-2">
                 {functionCalls.map((item, index) => {
@@ -293,6 +349,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             )}
             {formatOutput && !noAnswer ? (
               <Message
+                markdownClassName="!max-w-3xl"
                 key={item.id}
                 message={answer}
                 isStreamFinished={finished}
