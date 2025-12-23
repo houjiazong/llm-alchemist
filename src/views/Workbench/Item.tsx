@@ -63,6 +63,32 @@ const formatNum = (num: number | null | undefined, suffix?: string) => {
   return ret
 }
 
+const formatError = (err: unknown) => {
+  if (err instanceof Error) {
+    const details: string[] = []
+    const typedError = err as Error & {
+      code?: string
+      status?: number
+      response?: { status?: number; statusText?: string }
+    }
+    if (typedError.code) details.push(`code=${typedError.code}`)
+    if (typeof typedError.status === 'number')
+      details.push(`status=${typedError.status}`)
+    if (typedError.response?.status)
+      details.push(`status=${typedError.response.status}`)
+    if (typedError.response?.statusText)
+      details.push(typedError.response.statusText)
+    const suffix = details.length ? ` (${details.join(', ')})` : ''
+    return `${err.name}: ${err.message}${suffix}`.trim()
+  }
+  if (typeof err === 'string') return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return 'Unknown error'
+  }
+}
+
 const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
   (
     {
@@ -241,10 +267,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           return
         }
 
-        let errStr
-        if (error instanceof Error && error.name === 'VivAPIError') {
-          errStr = error?.message
-        }
+        const errStr = formatError(error)
         setReasoning('')
         setAnswer('')
         setPromptTokens(undefined)
