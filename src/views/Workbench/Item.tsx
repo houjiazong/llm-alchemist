@@ -422,7 +422,8 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
             >
-              Add your ingredients (Prompt), and trigger the ritual (Run).
+              Add your ingredients (User Instruction), and trigger the ritual
+              (Run).
             </motion.p>
           </div>
         )
@@ -446,7 +447,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
           >
-            Your alchemical experiment is ready—start the synthesis with Run.
+            Your alchemical experiment is ready — start the synthesis with Run.
           </motion.p>
         </div>
       )
@@ -471,6 +472,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
                 variant="outline"
                 disabled={loading}
                 onClick={run}
+                className="border-status-green-border bg-status-green-bg text-status-green-text hover:bg-status-green-bg/70"
               >
                 {loading ? (
                   <Loader2Icon className="animate-spin" />
@@ -483,6 +485,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
                 variant="outline"
                 onClick={handleRemove}
                 disabled={loading}
+                className="hover:bg-red-50 hover:text-red-600"
               >
                 <TrashIcon />
               </Button>

@@ -249,7 +249,11 @@ export function Workbench({ taskId }: WorkbenchProps) {
             {exporting && <LoaderIcon className="animate-spin w-4 h-4 mr-2" />}
             {isSelected ? 'Export Selected' : 'Export'}
           </Button>
-          <Button onClick={() => handleRun()} disabled={isLoading}>
+          <Button
+            onClick={() => handleRun()}
+            disabled={isLoading}
+            className="bg-status-green-text text-white hover:bg-status-green-text/90"
+          >
             {isSelected ? 'Run Selected' : 'Run All'}
           </Button>
         </div>

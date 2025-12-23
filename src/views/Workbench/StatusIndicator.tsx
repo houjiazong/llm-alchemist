@@ -30,7 +30,7 @@ export function StatusIndicator({
               {
                 'bg-red-500 shadow-red-500/40 ring-red-500/30':
                   !hasAnswer && !isLoading && hasError,
-                'bg-green-500 shadow-green-500/40 ring-green-500/30':
+                'bg-status-green-text ring-status-green-border shadow-[0_0_0_6px_rgba(110,231,183,0.35)]':
                   hasAnswer && !isLoading && !hasError,
                 'bg-yellow-500 shadow-yellow-500/40 ring-yellow-500/30':
                   isLoading,
