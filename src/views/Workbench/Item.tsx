@@ -501,7 +501,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             </div>
             <div>
               <TextareaAutosize
-                className="w-full rounded-lg border border-input bg-card text-sm px-3 py-2 text-foreground shadow-sm hover:border-border focus:border-secondary/50 transition-colors resize-none"
+                className="w-full min-h-[160px] rounded-lg border border-input bg-card text-sm px-3 py-2 text-foreground shadow-sm hover:border-border focus:border-secondary/50 transition-colors resize-none"
                 value={item.question}
                 onChange={async (e) =>
                   await handleUpdateItemToDB({
