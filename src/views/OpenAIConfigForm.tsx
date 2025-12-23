@@ -29,6 +29,14 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 const BASE_URL_SUGGESTIONS = [
   'https://api.vivgrid.com/v1',
@@ -149,228 +157,239 @@ export const OpenAIConfigForm = ({
         autoComplete="off"
         className="mt-1"
       >
-        <div className="flex-col space-y-4 flex max-w-xl mx-auto">
-          <FormField
-            control={form.control}
-            name="baseURL"
-            render={({ field }) => (
-              <FormItem className="grid gap-2 space-y-0">
-                <FormLabel>Base URL</FormLabel>
-                <FormControl>
-                  <Popover open={baseURLSuggestionsOpened}>
-                    <PopoverAnchor>
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">
+              Chat Completions API Configuration
+            </CardTitle>
+            <CardDescription>
+              Configure the endpoint, credentials, and model parameters for
+              OpenAI API compatible endpoint.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <FormField
+              control={form.control}
+              name="baseURL"
+              render={({ field }) => (
+                <FormItem className="grid gap-2 space-y-0">
+                  <FormLabel>Base URL</FormLabel>
+                  <FormControl>
+                    <Popover open={baseURLSuggestionsOpened}>
+                      <PopoverAnchor>
+                        <Input
+                          placeholder="Base URL"
+                          {...field}
+                          disabled={!!category}
+                          onFocus={() => setBaseURLInputFocused(true)}
+                          onBlur={() => setBaseURLInputFocused(false)}
+                          onKeyDown={(e) => {
+                            const isComposing =
+                              e.nativeEvent.isComposing || e.keyCode === 229
+                            if (e.defaultPrevented || isComposing) {
+                              return
+                            }
+                            switch (e.key) {
+                              case 'ArrowDown': {
+                                if (baseURLSuggestionsOpened) {
+                                  next(e)
+                                }
+                                break
+                              }
+                              case 'ArrowUp': {
+                                if (baseURLSuggestionsOpened) {
+                                  prev(e)
+                                }
+                                break
+                              }
+                              case 'Enter': {
+                                if (baseURLSuggestionsOpened) {
+                                  e.preventDefault()
+                                  form.setValue('baseURL', commandSelected)
+                                }
+                              }
+                            }
+                          }}
+                        />
+                      </PopoverAnchor>
+
+                      <PopoverContent
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                        className="w-[--radix-popover-trigger-width] p-0"
+                      >
+                        <Command value={commandSelected}>
+                          <CommandList>
+                            <CommandGroup heading="Suggestions">
+                              {filteredBaseURLSuggestions.map((str) => {
+                                return (
+                                  <CommandItem
+                                    key={str}
+                                    onSelect={(val) =>
+                                      form.setValue('baseURL', val)
+                                    }
+                                  >
+                                    {str}
+                                  </CommandItem>
+                                )
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="apiKey"
+              render={({ field }) => (
+                <FormItem className="grid gap-2 space-y-0">
+                  <FormLabel>API Key</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
                       <Input
-                        placeholder="Base URL"
-                        {...field}
                         disabled={!!category}
-                        onFocus={() => setBaseURLInputFocused(true)}
-                        onBlur={() => setBaseURLInputFocused(false)}
-                        onKeyDown={(e) => {
-                          const isComposing =
-                            e.nativeEvent.isComposing || e.keyCode === 229
-                          if (e.defaultPrevented || isComposing) {
-                            return
-                          }
-                          switch (e.key) {
-                            case 'ArrowDown': {
-                              if (baseURLSuggestionsOpened) {
-                                next(e)
+                        placeholder="API Key"
+                        {...field}
+                        style={
+                          showKey
+                            ? {}
+                            : {
+                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                                // @ts-ignore
+                                WebkitTextSecurity: 'disc',
+                                textSecurity: 'disc',
                               }
-                              break
-                            }
-                            case 'ArrowUp': {
-                              if (baseURLSuggestionsOpened) {
-                                prev(e)
-                              }
-                              break
-                            }
-                            case 'Enter': {
-                              if (baseURLSuggestionsOpened) {
-                                e.preventDefault()
-                                form.setValue('baseURL', commandSelected)
-                              }
-                            }
-                          }
-                        }}
+                        }
                       />
-                    </PopoverAnchor>
-
-                    <PopoverContent
-                      onOpenAutoFocus={(e) => e.preventDefault()}
-                      className="w-[--radix-popover-trigger-width] p-0"
-                    >
-                      <Command value={commandSelected}>
-                        <CommandList>
-                          <CommandGroup heading="Suggestions">
-                            {filteredBaseURLSuggestions.map((str) => {
-                              return (
-                                <CommandItem
-                                  key={str}
-                                  onSelect={(val) =>
-                                    form.setValue('baseURL', val)
-                                  }
-                                >
-                                  {str}
-                                </CommandItem>
-                              )
-                            })}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="apiKey"
-            render={({ field }) => (
-              <FormItem className="grid gap-2 space-y-0">
-                <FormLabel>API Key</FormLabel>
-                <FormControl>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      disabled={!!category}
-                      placeholder="API Key"
-                      {...field}
-                      style={
-                        showKey
-                          ? {}
-                          : {
-                              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                              // @ts-ignore
-                              WebkitTextSecurity: 'disc',
-                              textSecurity: 'disc',
-                            }
-                      }
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      type="button"
-                      onClick={() => setShowKey(!showKey)}
-                    >
-                      {!showKey ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        type="button"
+                        onClick={() => setShowKey(!showKey)}
+                      >
+                        {!showKey ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <Accordion type="single" collapsible>
+              <AccordionItem value="advanced" className="border-b-0">
+                <AccordionTrigger className="py-0">
+                  Advanced Settings
+                </AccordionTrigger>
+                <AccordionContent className="py-0 m-1">
+                  <div className="flex-col space-y-4 sm:flex md:order-2 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="params.model"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-2 space-y-0">
+                          <FormLabel>Model</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Model" {...field} />
+                          </FormControl>
+                        </FormItem>
                       )}
-                    </Button>
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <Accordion type="single" collapsible>
-            <AccordionItem value="advanced" className="border-b-0">
-              <AccordionTrigger className="py-0">
-                Advanced Settings
-              </AccordionTrigger>
-              <AccordionContent className="py-0 m-1">
-                <div className="flex-col space-y-4 sm:flex md:order-2 pt-4">
-                  <FormField
-                    control={form.control}
-                    name="params.model"
-                    render={({ field }) => (
-                      <FormItem className="grid gap-2 space-y-0">
-                        <FormLabel>Model</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Model" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="params.temperature"
-                    render={({ field }) => (
-                      <FormItem className="grid gap-4 space-y-0">
-                        <div className="flex items-center justify-between h-7">
-                          <FormLabel>Temperature</FormLabel>
-                          <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                            {field.value}
-                          </span>
-                        </div>
-                        <FormControl>
-                          <Slider
-                            min={0.1}
-                            max={2}
-                            step={0.1}
-                            value={[field.value]}
-                            onValueChange={(value) =>
-                              field.onChange(Number(value))
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="params.max_tokens"
-                    render={({ field }) => (
-                      <FormItem className="grid gap-4 space-y-0">
-                        <div className="flex items-center justify-between h-7">
-                          <FormLabel>Max Tokens</FormLabel>
-                          <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-                            {inputMaxTokens}
-                          </span>
-                        </div>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            max={8192}
-                            step={1024}
-                            value={inputMaxTokens ?? ''}
-                            onChange={(e) => {
-                              const inputValue = e.target.value
-                              if (inputValue === '') {
-                                console.log(inputValue)
-                                field.onChange(undefined)
-                                return
+                    />
+                    <FormField
+                      control={form.control}
+                      name="params.temperature"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-4 space-y-0">
+                          <div className="flex items-center justify-between h-7">
+                            <FormLabel>Temperature</FormLabel>
+                            <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                              {field.value}
+                            </span>
+                          </div>
+                          <FormControl>
+                            <Slider
+                              min={0.1}
+                              max={2}
+                              step={0.1}
+                              value={[field.value]}
+                              onValueChange={(value) =>
+                                field.onChange(Number(value))
                               }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="params.max_tokens"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-4 space-y-0">
+                          <div className="flex items-center justify-between h-7">
+                            <FormLabel>Max Tokens</FormLabel>
+                            <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                              {inputMaxTokens}
+                            </span>
+                          </div>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              max={8192}
+                              step={1024}
+                              value={inputMaxTokens ?? ''}
+                              onChange={(e) => {
+                                const inputValue = e.target.value
+                                if (inputValue === '') {
+                                  console.log(inputValue)
+                                  field.onChange(undefined)
+                                  return
+                                }
 
-                              let parsed = parseInt(inputValue, 10)
-                              if (!isNaN(parsed)) {
-                                if (parsed > 8192) parsed = 8192
-                                field.onChange(parsed)
-                              }
-                            }}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="params.stream"
-                    render={({ field }) => (
-                      <FormItem className="grid gap-4 space-y-0">
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Stream</FormLabel>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={(value) => {
-                              field.onChange(value)
-                            }}
-                          />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-          <div>
-            <Button type="submit" disabled={submiting} className="w-full">
+                                let parsed = parseInt(inputValue, 10)
+                                if (!isNaN(parsed)) {
+                                  if (parsed > 8192) parsed = 8192
+                                  field.onChange(parsed)
+                                }
+                              }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="params.stream"
+                      render={({ field }) => (
+                        <FormItem className="grid gap-4 space-y-0">
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Stream</FormLabel>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(value) => {
+                                field.onChange(value)
+                              }}
+                            />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+          <CardFooter className="border-t border-border bg-background/60 justify-end px-6 py-4">
+            <Button type="submit" disabled={submiting}>
               {submiting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              Save changes
             </Button>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
       </form>
     </Form>
   )

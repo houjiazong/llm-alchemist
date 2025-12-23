@@ -26,7 +26,7 @@ export const TaskLayout = () => {
     if (isActive)
       return cn(
         defaultClassNames,
-        'bg-primary text-primary-foreground hover:bg-primary/90 dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white'
+        'bg-card text-foreground border border-border shadow-sm hover:bg-muted/60'
       )
     return cn(defaultClassNames, 'hover:bg-accent hover:text-accent-foreground')
   }
