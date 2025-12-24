@@ -1,44 +1,34 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `src/` contains the React + TypeScript app.
-- `src/components/` holds reusable UI components.
-- `src/views/` contains page-level screens.
-- `src/routes/` defines routing.
-- `src/db/` handles IndexedDB/Dexie storage.
-- `src/lib/` is shared utilities.
-- `public/` stores static assets (e.g., `public/logo.svg`).
-- Root configs include `vite.config.ts`, `tailwind.config.ts`, and TypeScript configs.
+- `src/main.tsx` boots the React app and router; `src/routes` holds route layouts and page shells (home, workbench/settings, quick start, 404).
+- Reusable UI lives in `src/components`; feature forms and widgets live in `src/views`.
+- IndexedDB persistence is under `src/db` (Dexie). Shared helpers such as `cn` are in `src/lib/utils.ts`.
+- Static assets stay in `public`; Vite’s entry point is `index.html`. Branding/meta defaults live in `.env.example`.
 
 ## Build, Test, and Development Commands
-- `pnpm dev`: start the Vite dev server.
-- `pnpm build`: typecheck (`tsc -b`) and build the production bundle.
-- `pnpm preview`: serve the production build locally.
-- `pnpm lint`: run ESLint with project rules.
-- `pnpm lint:fix`: auto-fix lint and formatting issues.
-- `pnpm cf:preview`: build and preview with Cloudflare Pages.
-- `pnpm cf:deploy`: build and deploy to Cloudflare Pages.
+- `pnpm install` installs dependencies (pnpm enforced via `preinstall`).
+- `pnpm dev` starts Vite with hot reload for local development.
+- `pnpm build` runs TypeScript project references then builds to `dist`.
+- `pnpm preview` serves the production build from `dist`.
+- `pnpm lint` / `pnpm lint:fix` run ESLint + Prettier checks or auto-fixes.
+- Cloudflare Pages: `pnpm cf:preview` for local Wrangler preview; `pnpm cf:deploy` publishes `dist`.
 
 ## Coding Style & Naming Conventions
-- TypeScript + React with Tailwind CSS; prefer functional components.
-- Prettier enforces 2-space indent, single quotes, no semicolons.
-- ESLint + `eslint-plugin-prettier` gate formatting in CI/dev.
-- Use PascalCase for components (`src/components/FooBar.tsx`), camelCase for functions.
+- Language: TypeScript + React functional components; prefer hooks and co-locate route-specific pieces under `src/routes`.
+- Styling: Tailwind-first (`src/index.css`, `tailwind.config.ts`); favor utility classes over custom CSS.
+- Formatting: Prettier defaults—2-space indent, single quotes, no semicolons, trailing commas where valid.
+- Naming: components PascalCase (`TaskList.tsx`), hooks `useX`, utilities camelCase; keep file names aligned with exported components.
 
 ## Testing Guidelines
-- No automated test framework is configured yet.
-- Validate changes with `pnpm lint` and manual UI checks via `pnpm dev`.
-- If adding tests in the future, place them under `src/` near the feature.
+- No automated test suite wired yet; manually exercise critical flows (`pnpm dev`, create task, run workbench, import/export) before submitting.
+- If adding tests, colocate as `*.test.ts(x)` and prefer Vitest + React Testing Library; keep assertions deterministic.
 
 ## Commit & Pull Request Guidelines
-- Recent commits follow Conventional Commits (e.g., `feat: ...`, `fix: ...`).
-- Keep commits small and descriptive; include scope if helpful (e.g., `feat(ui): ...`).
-- PRs should include a clear description, linked issue (if any), and screenshots for UI changes.
-
-## Verification
-- `pnpm lint`
+- Commits: short, present-tense subjects with optional scopes like `ui:` or `update`; keep under ~70 characters.
+- PRs should include: intent summary, key implementation notes, screenshots/GIFs for UI changes, manual test steps, and any `.env` or `dev.proxy.config.js` updates. Link related issues when available.
 
 ## Configuration & Environment
-- Copy `example.dev.proxy.config.js` to `dev.proxy.config.js` for local proxying.
-- Environment defaults live in `.env.example` (`VITE_APP_TITLE`, `VITE_APP_LOGO_URL`, etc.).
-- `pnpm` is required (`npx only-allow pnpm` runs on install).
+- Copy `.env.example` to `.env` and set `VITE_APP_*` values for branding/meta.
+- For local proxying, copy `example.dev.proxy.config.js` to `dev.proxy.config.js` and adjust targets.
+- Run `pnpm install` before development; use `pnpm preview` or `pnpm cf:preview` to validate production output.
