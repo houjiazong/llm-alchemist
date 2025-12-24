@@ -54,27 +54,27 @@ export const TaskList = () => {
 
   return (
     <ScrollArea className="h-full">
-      <div className="h-full py-8 space-y-3 px-4">
+      <div className="h-full py-5 space-y-2.5 px-0">
         {tasks.map((task) => {
           return (
             <Card
               key={task.id}
               className={cn(
-                'group cursor-pointer hover:border-gray-500 relative',
+                'group cursor-pointer hover:border-foreground/20 relative',
                 {
-                  'border-gray-400': params.taskId === task.id.toString(),
+                  'border-foreground/25': params.taskId === task.id.toString(),
                 }
               )}
               onClick={() => onCardClick(task.id)}
             >
-              <CardHeader className="p-3 space-y-2">
+              <CardHeader className="p-3 space-y-1.5">
                 <CardTitle className="flex items-center">
                   <div className="flex-1 w-0 truncate">{task.name}</div>
                 </CardTitle>
                 <CardDescription className="flex flex-col gap-2">
                   {task.desc && <div className="break-all">{task.desc}</div>}
                   <div className="flex gap-2 items-center">
-                    <div className="flex-1 truncate w-0 text-gray-400 text-xs">
+                    <div className="flex-1 truncate w-0 text-muted-foreground text-xs">
                       {formatDistanceToNow(task.created_at, {
                         addSuffix: true,
                       })}

@@ -63,6 +63,32 @@ const formatNum = (num: number | null | undefined, suffix?: string) => {
   return ret
 }
 
+const formatError = (err: unknown) => {
+  if (err instanceof Error) {
+    const details: string[] = []
+    const typedError = err as Error & {
+      code?: string
+      status?: number
+      response?: { status?: number; statusText?: string }
+    }
+    if (typedError.code) details.push(`code=${typedError.code}`)
+    if (typeof typedError.status === 'number')
+      details.push(`status=${typedError.status}`)
+    if (typedError.response?.status)
+      details.push(`status=${typedError.response.status}`)
+    if (typedError.response?.statusText)
+      details.push(typedError.response.statusText)
+    const suffix = details.length ? ` (${details.join(', ')})` : ''
+    return `${err.name}: ${err.message}${suffix}`.trim()
+  }
+  if (typeof err === 'string') return err
+  try {
+    return JSON.stringify(err)
+  } catch {
+    return 'Unknown error'
+  }
+}
+
 const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
   (
     {
@@ -241,10 +267,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           return
         }
 
-        let errStr
-        if (error instanceof Error && error.name === 'VivAPIError') {
-          errStr = error?.message
-        }
+        const errStr = formatError(error)
         setReasoning('')
         setAnswer('')
         setPromptTokens(undefined)
@@ -422,7 +445,8 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
             >
-              Add your ingredients (Prompt), and trigger the ritual (Run).
+              Add your ingredients (User Instruction), and trigger the ritual
+              (Run).
             </motion.p>
           </div>
         )
@@ -446,7 +470,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
           >
-            Your alchemical experiment is ready—start the synthesis with Run.
+            Your alchemical experiment is ready — start the synthesis with Run.
           </motion.p>
         </div>
       )
@@ -455,11 +479,11 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
     return (
       <div
         ref={containerRef}
-        className="items-start gap-4 rounded-lg border text-left text-sm transition-all hover:bg-accent/30 grid grid-cols-6 shadow-sm"
+        className="items-start gap-4 rounded-[var(--radius)] border border-border bg-card text-left text-sm transition-shadow hover:shadow-[0_4px_12px_rgba(16,24,40,0.08)] grid grid-cols-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
       >
-        <div className="col-span-6 sticky top-0 bg-accent/40 h-[48px] backdrop-blur-sm z-50 flex items-center justify-between px-4">
+        <div className="col-span-6 sticky top-0 z-50 flex items-center justify-between px-4 h-[52px] border-b border-border bg-background/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-bold">
+            <Badge variant="outline" className="font-semibold">
               {index + 1}
             </Badge>
           </div>
@@ -471,6 +495,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
                 variant="outline"
                 disabled={loading}
                 onClick={run}
+                className="border-status-green-border bg-status-green-bg text-status-green-text hover:bg-status-green-bg/70"
               >
                 {loading ? (
                   <Loader2Icon className="animate-spin" />
@@ -483,25 +508,26 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
                 variant="outline"
                 onClick={handleRemove}
                 disabled={loading}
+                className="hover:bg-red-50 hover:text-red-600"
               >
                 <TrashIcon />
               </Button>
             </div>
           )}
         </div>
-        <div className="col-span-2 sticky top-[56px] pl-4 pb-4">
+        <div className="col-span-2 sticky top-[60px] pl-4 pb-5">
           <div className="space-y-3">
             <div>
               <Badge
                 variant="outline"
-                className="font-semibold bg-primary/10 text-primary hover:bg-primary/20"
+                className="font-semibold bg-secondary text-secondary-foreground"
               >
-                Prompt
+                User Instruction
               </Badge>
             </div>
             <div>
               <TextareaAutosize
-                className="w-full shadow-none border text-sm px-3 py-2 text-foreground hover:border-border focus:border-secondary/50 transition-colors resize-none"
+                className="w-full min-h-[160px] rounded-lg border border-input bg-card text-sm px-3 py-2 text-foreground shadow-sm hover:border-border focus:border-secondary/50 transition-colors resize-none"
                 value={item.question}
                 onChange={async (e) =>
                   await handleUpdateItemToDB({
@@ -517,16 +543,16 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             </div>
           </div>
         </div>
-        <div className="col-span-4 sticky top-[56px] pr-4 pb-4">
+        <div className="col-span-4 sticky top-[60px] pr-4 pb-5">
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center justify-between gap-2 w-full">
                 <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
-                    className="font-semibold bg-primary/10 text-primary hover:bg-primary/20"
+                    className="font-semibold bg-secondary text-secondary-foreground"
                   >
-                    Output
+                    Agent Output
                   </Badge>
                   {model && <Badge className="font-bold">{model}</Badge>}
                 </div>
@@ -545,34 +571,44 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
                 />
               </div>
             </div>
-            <div className="rounded-md border border-dashed p-4 bg-muted/5">
+            <div className="rounded-lg border border-dashed border-border/80 p-4 bg-background">
               {renderContent()}
             </div>
-            <div className="text-sm space-y-2">
+            <div className="text-xs text-muted-foreground space-y-2">
               <div className="flex items-center gap-2">
                 <ChevronsLeftRightEllipsisIcon className="w-4 h-4" />
                 <div className="space-x-1">
-                  <span className="text-muted-foreground">Prompt:</span>
-                  <span>{formatNum(promptTokens)}</span>
+                  <span>Input Token:</span>
+                  <span className="text-foreground">
+                    {formatNum(promptTokens)}
+                  </span>
                 </div>
                 <div className="space-x-1">
-                  <span className="text-muted-foreground">Completion:</span>
-                  <span>{formatNum(completionTokens)}</span>
+                  <span>Output Token:</span>
+                  <span className="text-foreground">
+                    {formatNum(completionTokens)}
+                  </span>
                 </div>
                 <div className="space-x-1">
-                  <span className="text-muted-foreground">Total:</span>
-                  <span>{formatNum(totalTokens)}</span>
+                  <span>Total:</span>
+                  <span className="text-foreground">
+                    {formatNum(totalTokens)}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <ClockIcon className="w-4 h-4" />
                 <div className="space-x-1">
-                  <span className="text-muted-foreground">TTFT:</span>
-                  <span>{formatNum(ttft, 'ms')}</span>
+                  <span>TTFT:</span>
+                  <span className="text-foreground">
+                    {formatNum(ttft, 'ms')}
+                  </span>
                 </div>
                 <div className="space-x-1">
-                  <span className="text-muted-foreground">Completion:</span>
-                  <span>{formatNum(completion, 'ms')}</span>
+                  <span>Total Completion Time:</span>
+                  <span className="text-foreground">
+                    {formatNum(completion, 'ms')}
+                  </span>
                 </div>
               </div>
             </div>

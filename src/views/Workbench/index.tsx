@@ -228,8 +228,8 @@ export function Workbench({ taskId }: WorkbenchProps) {
   }, [loadings])
 
   return (
-    <div className="h-full flex flex-col overflow-hidden gap-2">
-      <div className="flex-shrink-0 flex-grow-0 px-4 flex items-center gap-2">
+    <div className="h-full flex flex-col overflow-hidden gap-3">
+      <div className="flex-shrink-0 flex-grow-0 px-6 flex items-center gap-3">
         <div className="flex-1">
           <StatusIndicator
             qas={qas}
@@ -250,9 +250,9 @@ export function Workbench({ taskId }: WorkbenchProps) {
             {isSelected ? 'Export Selected' : 'Export'}
           </Button>
           <Button
-            variant="outline"
             onClick={() => handleRun()}
             disabled={isLoading}
+            className="bg-status-green-text text-white hover:bg-status-green-text/90"
           >
             {isSelected ? 'Run Selected' : 'Run All'}
           </Button>
@@ -261,7 +261,7 @@ export function Workbench({ taskId }: WorkbenchProps) {
       <div className="flex-1 h-0">
         <ScrollArea className="h-full">
           {client && (
-            <div className="flex flex-col gap-4 px-4">
+            <div className="flex flex-col gap-4 px-6">
               {qas.map((qa, index) => {
                 return (
                   <WorkbenchItem

@@ -28,25 +28,25 @@ export const App = () => {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <TooltipProvider delayDuration={0}>
         <div className="h-screen flex">
-          <aside className="w-[260px] border-r shadow-md flex flex-col flex-shrink-0 flex-grow-0 py-4">
-            <header className="flex items-center px-4">
+          <aside className="w-[260px] border-r shadow-md bg-background flex flex-col flex-shrink-0 flex-grow-0 gap-4 px-4 py-5">
+            <header className="flex items-start gap-3">
               <div className="flex-1">
-                <h2 className="text-lg font-semibold tracking-tight">
+                <h2 className="text-base font-semibold tracking-tight">
                   {config.app.title}
                 </h2>
-                <div className="text-sm font-light text-muted-foreground">
+                <div className="text-xs font-medium text-muted-foreground">
                   {config.app.description}
                 </div>
               </div>
               <div
-                className="bg-no-repeat bg-cover bg-center h-12 w-12"
+                className="bg-no-repeat bg-cover bg-center h-11 w-11"
                 style={{ backgroundImage: `url(${config.app.logo})` }}
               />
             </header>
             <main className="flex-1 h-0">
               <TaskList />
             </main>
-            <footer className="flex items-center px-4">
+            <footer className="flex items-center gap-3">
               <div className="flex-1 flex gap-2">
                 <TaskExport taskId={taskId} />
                 <TaskImport
