@@ -481,7 +481,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         ref={containerRef}
         className="items-start gap-4 rounded-[var(--radius)] border border-border bg-card text-left text-sm transition-shadow hover:shadow-[0_4px_12px_rgba(16,24,40,0.08)] grid grid-cols-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
       >
-        <div className="col-span-6 sticky top-0 z-50 flex items-center justify-between px-4 h-[52px] border-b border-border bg-background/80 backdrop-blur-sm">
+        <div className="col-span-6 sticky top-0 z-50 flex items-center justify-between px-4 h-[52px] border-b border-border bg-background/80 backdrop-blur-sm rounded-t-[var(--radius)]">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-semibold">
               {index + 1}

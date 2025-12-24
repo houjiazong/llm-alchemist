@@ -88,7 +88,7 @@ export const TaskList = () => {
                 </CardDescription>
               </CardHeader>
               <CircleX
-                className="absolute -right-1 -top-1 rounded-full opacity-0 translate-x-1 ml-2 h-4 w-4 text-primary bg-primary-foreground hover:text-primary-foreground hover:bg-primary group-hover:opacity-100 group-hover:translate-x-0 transition-[opacity,transform]"
+                className="absolute right-0 -top-1 rounded-full opacity-0 translate-x-1 ml-2 h-4 w-4 text-primary bg-primary-foreground hover:text-primary-foreground hover:bg-primary group-hover:opacity-100 group-hover:translate-x-0 transition-[opacity,transform]"
                 onClick={(evt) => removeTask(evt, task.id)}
               />
             </Card>
