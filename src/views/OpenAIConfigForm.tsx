@@ -44,6 +44,14 @@ const BASE_URL_SUGGESTIONS = [
   'http://localhost:9000/v1',
 ]
 
+const maskApiKey = (apiKey: string) => {
+  if (!apiKey) return ''
+  if (apiKey.length <= 8) return apiKey
+  const prefix = apiKey.slice(0, 4)
+  const suffix = apiKey.slice(-4)
+  return `${prefix}${'*'.repeat(Math.max(apiKey.length - 8, 0))}${suffix}`
+}
+
 const openAIConfigSchema = z.object({
   baseURL: z.string().min(1, 'Base URL is required'),
   apiKey: z.string().min(1, 'API Key is required'),
@@ -86,21 +94,23 @@ export const OpenAIConfigForm = ({
       apiKey: value?.apiKey ?? '',
       params: {
         model: value?.params?.model ?? '',
-        max_tokens: value?.params?.max_tokens,
+        max_tokens: value?.params?.max_tokens ?? 4096,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? true,
       },
     },
   })
   const inputBaseURL = form.watch('baseURL')
+  const apiKeyValue = form.watch('apiKey') || ''
   const inputMaxTokens = form.watch('params.max_tokens')
+  const maskedApiKey = useMemo(() => maskApiKey(apiKeyValue), [apiKeyValue])
   useEffect(() => {
     form.reset({
       baseURL: value?.baseURL ?? '',
       apiKey: value?.apiKey ?? '',
       params: {
         model: value?.params?.model ?? '',
-        max_tokens: value?.params?.max_tokens,
+        max_tokens: value?.params?.max_tokens ?? 4096,
         temperature: value?.params?.temperature ?? 0.7,
         stream: value?.params?.stream ?? true,
       },
@@ -249,21 +259,24 @@ export const OpenAIConfigForm = ({
                   <FormLabel>API Key</FormLabel>
                   <FormControl>
                     <div className="flex items-center space-x-2">
-                      <Input
-                        disabled={!!category}
-                        placeholder="API Key"
-                        {...field}
-                        style={
-                          showKey
-                            ? {}
-                            : {
-                                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                                // @ts-ignore
-                                WebkitTextSecurity: 'disc',
-                                textSecurity: 'disc',
-                              }
-                        }
-                      />
+                      <div className="relative w-full">
+                        <Input
+                          disabled={!!category}
+                          placeholder="API Key"
+                          {...field}
+                          value={apiKeyValue}
+                          className={
+                            !showKey && apiKeyValue
+                              ? 'text-transparent caret-foreground font-mono'
+                              : 'font-mono'
+                          }
+                        />
+                        {!showKey && apiKeyValue && (
+                          <span className="pointer-events-none absolute inset-0 flex items-center px-3 py-1 text-sm text-foreground font-mono">
+                            {maskedApiKey}
+                          </span>
+                        )}
+                      </div>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -331,7 +344,7 @@ export const OpenAIConfigForm = ({
                       render={({ field }) => (
                         <FormItem className="grid gap-4 space-y-0">
                           <div className="flex items-center justify-between h-7">
-                            <FormLabel>Max Tokens</FormLabel>
+                            <FormLabel>Max Completion Tokens</FormLabel>
                             <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
                               {inputMaxTokens}
                             </span>

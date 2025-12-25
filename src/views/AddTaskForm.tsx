@@ -52,7 +52,7 @@ export const AddTaskForm = ({ onSuccess }: AddTaskFormProps) => {
           baseURL: 'https://api.vivgrid.com/v1',
           apiKey: '',
           params: {
-            max_tokens: 2048,
+            max_tokens: 4096,
             stream: true,
             temperature: 0.7,
           },

@@ -52,7 +52,7 @@ export const QuickStart = () => {
             params: {
               model: existingTask?.openAIOptions?.params?.model ?? '',
               max_tokens:
-                existingTask?.openAIOptions?.params?.max_tokens ?? 2048,
+                existingTask?.openAIOptions?.params?.max_tokens ?? 4096,
               temperature:
                 existingTask?.openAIOptions?.params?.temperature ?? 0.7,
               stream: existingTask?.openAIOptions?.params?.stream ?? true,
