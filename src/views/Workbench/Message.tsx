@@ -113,7 +113,7 @@ export const Message = memo(
       <div className="relative group">
         <Button
           className={cn(
-            'absolute -top-6 -right-2 !transition-opacity !ease-in !duration-150 group-hover:opacity-100 ',
+            'absolute -top-4 -right-2 !transition-opacity !ease-in !duration-150 group-hover:opacity-100 ',
             isCopied ? 'opacity-100' : 'opacity-0'
           )}
           size="sm"

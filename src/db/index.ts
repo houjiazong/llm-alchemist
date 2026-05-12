@@ -1,4 +1,4 @@
-import { type FunctionCall } from '@yomo/viv'
+import { type FunctionCall, type FunctionResultChunk } from '@yomo/viv'
 import Dexie, { type EntityTable } from 'dexie'
 
 export interface LLMUsage {
@@ -18,6 +18,7 @@ interface QA {
   model?: string
   error?: string
   functionCalls?: FunctionCall[]
+  functionCallResults?: FunctionResultChunk[]
   reasoning?: string
 }
 
@@ -51,5 +52,5 @@ const db = new Dexie('la') as Dexie & {
 
 db.version(5).stores(DB_STRUCTURE)
 
-export type { Task, QA, OpenAIOptions }
+export type { Task, QA, OpenAIOptions, FunctionResultChunk }
 export { db }
