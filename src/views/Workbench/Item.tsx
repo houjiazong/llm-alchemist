@@ -34,6 +34,7 @@ import Viv, {
   type Message as VivMessage,
   type TokenUsageChunk,
   type FunctionCall,
+  type FunctionResultChunk,
 } from '@yomo/viv'
 import { FunctionCallBlock } from './FunctionCallBlock'
 
@@ -132,6 +133,10 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       FunctionCall[] | undefined
     >(item.functionCalls)
 
+    const [functionCallResults, setFunctionCallResults] = useState<
+      FunctionResultChunk[] | undefined
+    >(item.functionCallResults)
+
     const [reasoningFinished, setReasoningFinished] = useState(true)
     const [reasoning, setReasoning] = useState<string | undefined>(
       item.reasoning
@@ -156,6 +161,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
       setTotalTokens(undefined)
       setModel(undefined)
       setFunctionCalls(undefined)
+      setFunctionCallResults(undefined)
       setReasoning(undefined)
     }, [])
 
@@ -190,6 +196,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         let _total_tokens
         let _model
         let _functionCalls: FunctionCall[] | undefined
+        let _functionCallResults: FunctionResultChunk[] | undefined
         for await (const chunk of stream) {
           if (abortSignal?.aborted) {
             console.log('Operation aborted during streaming')
@@ -236,6 +243,17 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
               setFunctionCalls([..._functionCalls])
             }
           }
+          if (chunk.type === 'functionCallResult') {
+            if (chunk.data) {
+              if (!_functionCallResults) {
+                _functionCallResults = []
+              }
+              _functionCallResults.push(
+                chunk.data as unknown as FunctionResultChunk
+              )
+              setFunctionCallResults([..._functionCallResults])
+            }
+          }
         }
         if (abortSignal?.aborted) {
           console.log('Operation aborted before database update')
@@ -252,6 +270,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
           },
           model: _model,
           functionCalls: _functionCalls,
+          functionCallResults: _functionCallResults,
           error: '',
         })
 
@@ -260,6 +279,7 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
         setCompletionTokens(_completion_tokens)
         setTotalTokens(_total_tokens)
         setModel(_model)
+        setFunctionCallResults(_functionCallResults)
         setError('')
       } catch (error) {
         if (abortSignal?.aborted) {
@@ -366,7 +386,19 @@ const Item = forwardRef<WorkbenchItemRef, WorkbenchItemProps>(
             {functionCalls && functionCalls.length > 0 && (
               <div className="space-y-2">
                 {functionCalls.map((item, index) => {
-                  return <FunctionCallBlock key={index} data={item} />
+                  const callId =
+                    item.id ||
+                    (item as unknown as { tool_call_id?: string }).tool_call_id
+                  const result = functionCallResults?.find(
+                    (r) => r.tool_call_id === callId
+                  )
+                  return (
+                    <FunctionCallBlock
+                      key={index}
+                      data={item}
+                      result={result}
+                    />
+                  )
                 })}
               </div>
             )}
